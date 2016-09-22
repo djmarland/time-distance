@@ -1,0 +1,23 @@
+home:
+  path:     /
+  defaults: { _controller: AppBundle:Home:index }
+
+game_status:
+  path:     /status.json
+  defaults: { _controller: AppBundle:Game:status }
+
+hub_list:
+  path:     /hubs
+  defaults: { _controller: AppBundle:Hubs:list, format: null }
+
+hub_show:
+  path:     /hubs/{urlKey}.{format}
+  defaults: { _controller: AppBundle:Hubs:show, format: null }
+
+action_new_player:
+  path:     /action/new-player.json
+  defaults: { _controller: AppBundle:Game:newPlayer }
+
+action_make_move:
+  path:     /action/make-move.json
+  defaults: { _controller: AppBundle:Game:makeMove }

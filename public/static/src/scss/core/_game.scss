@@ -1,0 +1,45 @@
+$game-header-height: 32px;
+
+.game-body {
+    &,
+    .body-area,
+    .game {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.game__header {
+    height: $game-header-height;
+    background: #000;
+    color: #fff;
+}
+
+.game__panel {
+
+}
+
+.game__panel--active {
+    background: goldenrod;
+    @include mq($until: xl) {
+        height: calc(100vh - #{$game-header-height});
+    }
+}
+
+.game__panel--board {
+    @include mq($from: xl) {
+        height: 50vh;
+    }
+}
+.game__panel--player,
+.game__panel--abilities {
+    background: green;
+    @include mq($from: xl) {
+        height: calc(50vh - #{$game-header-height});
+    }
+}
+
+.game__panel--abilities {
+    background: brown;
+}
+

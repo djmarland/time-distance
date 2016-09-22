@@ -1,0 +1,11 @@
+{% extends 'AppBundle::base.html.twig' %}
+
+
+{% block body %}
+<h1>Hello</h1>
+{% endblock %}
+
+{% block footerScripts %}
+    <script src="{{ 'vendor.js'|asset_path }}"></script>
+    <script src="{{ 'game.js'|asset_path }}"></script>
+{% endblock %}

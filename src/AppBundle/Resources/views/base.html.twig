@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ meta.fullTitle }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ 'styles.css'|asset_path }}" />
+</head>
+<body class="{% block bodyClass %}{% endblock %}" data-env="{{ meta.environment }}">
+{% include '@partials/_icons.html.twig' %}
+<div class="body-area" id="app-container">
+<header><div class="header">
+    Header
+</div></header>
+<main>
+    {% block body %}{% endblock %}
+</main>
+<footer><div class="footer">
+    Footer
+</div></footer>
+</div>
+{% block footerScripts %}{% endblock %}
+</body>
+</html>

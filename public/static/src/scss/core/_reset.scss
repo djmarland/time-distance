@@ -1,0 +1,62 @@
+@import "../vendor/normalize";
+
+// this is the custom reset,
+// for setting default styles on semantic elements (not classes)
+
+*, *:before, *:after,
+h1, h2, h3, h4, h5, h6, p {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    height:100%
+}
+
+body {
+    min-height: 100%;
+}
+
+html {
+    // always make the scroll-bar visible (so no page jump between pages)
+    overflow-y: scroll;
+}
+
+body {
+    padding: 0;
+    font-family: $font-body;
+}
+
+img,
+svg {
+    width: 100%;
+    height: auto;
+}
+
+ul, ol {
+    list-style-position: inside;
+    padding: 0;
+}
+ul {
+    list-style-type: square;
+}
+
+a {
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    &:hover,
+    &:active,
+    &:focus {
+        text-decoration: underline;
+    }
+}
+
+
+/* Fix breaking the symfony debug bar */
+.sf-toolbar {
+    img, svg {
+        width: auto;
+    }
+}

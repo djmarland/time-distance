@@ -1,0 +1,43 @@
+services:
+
+  app.listener.preexecute:
+      class: AppBundle\Resources\Listener
+      tags:
+          - { name: kernel.event_listener, event: kernel.controller, method: onKernelController }
+
+  app.twig_extension:
+      class: AppBundle\Extension\AssetPathExtension
+      public: false
+      arguments: ["%kernel.root_dir%/config"]
+      tags:
+          - { name: twig.extension }
+
+  app.time_provider:
+      class: DateTimeImmutable
+
+  app.email.sender:
+      class: AppBundle\Service\EmailService
+      arguments:
+          - "@swiftmailer.mailer"
+          - %mailer_user%
+          - "Time and Distance"
+#          - "@app.email.from_name"
+
+
+  app.services.hubs:
+      class: GameService\Service\HubsService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
+
+  app.services.players:
+      class: GameService\Service\PlayersService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
+
+  app.services.positions:
+      class: GameService\Service\PositionsService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
