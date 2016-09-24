@@ -1,0 +1,64 @@
+{% extends 'AppBundle::base.html.twig' %}
+
+{% block body %}
+    <style>
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table td,
+        .table th {
+            padding: 16px 8px;
+            text-align: left;
+        }
+        thead > tr,
+        tfoot > tr{
+            background: #666;
+            color: #fff;
+        }
+        tbody > tr:nth-child(even) {
+            background: #ccc;
+        }
+        tbody {
+            border-bottom: solid 1px #666;
+        }
+    </style>
+    <h1 class="g-unit">Game Stats</h1>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Stat</th>
+            <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+            {# todo - hide this stat before go-live #}
+            <tr>
+                <td>Total number of players</td>
+                <td>{{ stats.players }}</td>
+            </tr>
+            <tr>
+                <td>Points in the market</td>
+                <td>{{ stats.totalPoints }}</td>
+            </tr>
+            <tr>
+                <td>Overall points index</td>
+                <td>{{ stats.pointsRate }}</td>
+            </tr>
+            <tr>
+                <td>Players in hubs</td>
+                <td>{{ stats.inHubsPercent }}%</td>
+            </tr>
+            <tr>
+                <td>Players in safe havens</td>
+                <td>{{ stats.safePercent }}%</td>
+            </tr>
+            <tr>
+                <td>Players travelling</td>
+                <td>{{ stats.travellingPercent }}%</td>
+            </tr>
+        </tbody>
+    </table>
+
+{% endblock %}

@@ -41,3 +41,9 @@ services:
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+
+  app.services.spokes:
+      class: GameService\Service\SpokesService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"

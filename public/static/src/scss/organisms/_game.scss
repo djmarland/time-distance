@@ -1,5 +1,3 @@
-$game-header-height: 32px;
-
 .game-body {
     &,
     .body-area,
@@ -9,12 +7,6 @@ $game-header-height: 32px;
     }
 }
 
-.game__header {
-    height: $game-header-height;
-    background: #000;
-    color: #fff;
-}
-
 .game__panel {
 
 }
@@ -22,7 +14,7 @@ $game-header-height: 32px;
 .game__panel--active {
     background: goldenrod;
     @include mq($until: xl) {
-        height: calc(100vh - #{$game-header-height});
+        height: calc(100vh - #{$size-header-height});
     }
 }
 
@@ -35,7 +27,7 @@ $game-header-height: 32px;
 .game__panel--abilities {
     background: green;
     @include mq($from: xl) {
-        height: calc(50vh - #{$game-header-height});
+        height: calc(50vh - #{$size-header-height});
     }
 }
 

@@ -1,6 +1,10 @@
 imports:
     - { resource: config.yml }
 
+parameters:
+    distance_multiplier: 36 # seconds per distance unit (note: 0 = fixed 60 seconds)
+    locale: en
+
 framework:
     router:
         resource: "%kernel.root_dir%/config/routing_dev.yml"

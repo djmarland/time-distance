@@ -1,0 +1,10 @@
+{% extends 'AppBundle::base.html.twig' %}
+
+{% block body %}
+    <h1 class="g-unit">Players</h1>
+    <ul>
+        {% for player in players %}
+            <li><a href="{{ player.url }}">{{ player.nickname }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

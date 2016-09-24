@@ -2,5 +2,31 @@
 
 {% block body %}
     <h1 class="g-unit">{{ hub.name }}</h1>
-    <h2>{{ hub.clusterName }}</h2>
+    <p>{{ hub.clusterName }}</p>
+    <p>Owned by: -player-</p>
+    <p>Clan: -clan-</p>
+
+    <h2>Players present</h2>
+    <div id="app-hub" data-initial="{{ playersData }}" data-hubkey={{ hub.urlKey }}>
+        {% if playersPresent %}
+                <ul>
+                    {% for player in players %}
+                        <li>
+                            <div class="grid">
+                                <div class="g 1/2">
+                                    <a href="{{ player.url }}">{{ player.nickname }}</a>
+                                </div>
+                                <div class="g 1/2">
+                                    {{ player.pointsEstimate }}
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+        {% else %}
+            <p>No players present in this hub</p>
+        {% endif %}
+    </div>
+
+    <h2>Abilities available for pickup</h2>
 {% endblock %}

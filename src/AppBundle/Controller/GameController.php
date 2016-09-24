@@ -2,16 +2,24 @@
 
 namespace AppBundle\Controller;
 
-
-use GameService\Domain\Entity\Hub;
 use GameService\Domain\Entity\Player;
 use GameService\Domain\Entity\Position;
+use GameService\Domain\Entity\Spoke;
 use GameService\Domain\Exception\EntityNotFoundException;
+use GameService\Domain\Exception\InvalidBearingException;
 use GameService\Domain\Exception\InvalidNicknameException;
+use GameService\Domain\ValueObject\Bearing;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class GameController extends Controller
 {
+    protected $cacheTime = null; // game screens are not cachable
+
+    public function playAction()
+    {
+        return $this->renderTemplate('game:play');
+    }
+
     public function newPlayerAction()
     {
         // eventually this action should come via a POST and be using OAUTH stuff
@@ -33,52 +41,111 @@ class GameController extends Controller
 
     public function makeMoveAction()
     {
-        // todo - input should simply be a direction. what that means will be calculated server side from current
+        $player = $this->getPlayer();
 
-        // where are you moving to (currently get the preferred hub key)
-        $key = $this->request->query->get('hub-key');
+        // get the bearing supplied
+        $bearing = $this->request->getContent();
+        try {
+            $bearing = new Bearing($bearing);
+        } catch (InvalidBearingException $e) {
+            throw new HttpException(400, 'Invalid direction provided');
+        }
 
-        $this->get('app.services.players')
-            ->movePlayerToHub($this->getPlayer(), $key);
+        // get the players current position
+        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
 
-        return $this->statusAction();
+        if (!$position->isInHub()) {
+            throw new HttpException(400, 'Not in a valid state to perform move');
+        }
+
+        $currentHub = $position->getLocation();
+
+        // check the bearing was valid, by fetching all of the directions available
+        $spokes = $this->get('app.services.spokes')
+            ->findForHubDetailed($currentHub);
+
+        // find the requested spoke in the preferred direction
+        $chosenSpoke = null;
+        foreach ($spokes as $spoke) {
+            /** @var Spoke $spoke */
+            if ($spoke->getRelativeBearing($currentHub) == $bearing) {
+                $chosenSpoke = $spoke;
+                break;
+            }
+        }
+
+        // if we didn't find it, this is an invalid move
+        if (!$chosenSpoke) {
+            throw new HttpException(400, 'Invalid move. No cheating!');
+        }
+
+        // calculate spoke direction, and completion time
+        $reverseDirection = $chosenSpoke->isReverseDirection($currentHub);
+
+        // todo - this should probably be abstracted somewhere
+        $now = $this->get('app.time_provider');
+        $distanceMultiplier = $this->getParameter('distance_multiplier');
+        $distance = $chosenSpoke->getDistance();
+
+        $secondsToAdd = floor($distanceMultiplier / 60); // 1/60 of multiplier by default if distance = 0
+        $secondsToAdd = min($secondsToAdd, 1);
+        if ($distance) {
+            $secondsToAdd = $distance * $distanceMultiplier;
+        }
+
+        $endTime = $now->add(new \DateInterval('PT' . $secondsToAdd . 'S'));
+
+        $this->get('app.services.players')->movePlayerToSpoke(
+            $player,
+            $chosenSpoke,
+            $endTime,
+            $reverseDirection
+        );
+
+        return $this->renderStatus();
     }
 
     public function statusAction()
     {
         $player = $this->getPlayer();
+        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
 
-        $position = $this->get('app.services.positions')
-            ->findFullCurrentPositionForPlayer($player);
+        if (!$position->isInHub()) {
+            // check if the player should be moved into a hub
+            if ($position->getExitTime() <= $this->get('app.time_provider')) {
+                $this->get('app.services.players')->movePlayerToHub(
+                    $player,
+                    $position->getLocation()->getDestinationHubFromDirection($position->isReverseDirection())
+                );
+            }
+        }
 
-        $data = [];
+        return $this->renderStatus();
+    }
 
-        $data['currentTime'] = (new \DateTimeImmutable())->format('c');
+    private function renderStatus()
+    {
+        $player = $this->getPlayer();
+        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
 
-        $data['currentPosition'] = $this->getCurrentPositon($position);
+        $this->toView(
+            'gameSettings', [
+            'currentTime' => $this->get('app.time_provider')->format('c'),
+            'distanceMultiplier' => $this->getParameter('distance_multiplier')
+        ],
+            true
+        );
+        $this->toView('player', $player, true);
+        $this->toView('position', $position, true);
+        $this->toView('directions', $this->getDirections($position), true);
 
-        $data['player'] = $this->getPlayerInformation($player);
+        $playersPresent = [];
+        if ($position->isInHub()) {
+            $playersPresent = $this->get('app.services.players')
+                ->findInHub($position->getLocation());
+        }
 
-        $data['visibleBoard'] = [
-            'rowsCount' => 30,
-            'colsCount' => 20,
-            'rows' => [
-                0 => [
-                    0 => null
-                ],
-                1 => [
-                    0 => [
-                        'hub' => []
-                    ],
-                    1 => null,
-                    2 => [
-                        'spoke' => []
-                    ]
-                ]
-            ]
-        ];
-
-        $this->toView('status', $data, true);
+        $this->toView('playersPresent', $playersPresent, true);
 
         return $this->renderJSON();
     }
@@ -96,87 +163,37 @@ class GameController extends Controller
         }
     }
 
-    private function getCurrentPositon(Position $position)
+    private function getDirections(Position $position)
     {
-        // temporary lis until proper spokes and linking
-        $temporaryHubsList = $this->get('app.services.hubs')
-            ->findAllDetailed();
+        if (!$position->isInHub()) {
+            return null;
+        }
+        $hub = $position->getLocation();
 
-        $hubs = [];
-        foreach($temporaryHubsList as $hub) {
-            /** @var Hub $hub */
-            if ($hub->getId() != $position->getLocation()->getId()) {
-                // don't include the current hub
-                $hubs[] = $this->getHubInfo($hub, $position->getLocation());
-            }
+        $spokes = $this->get('app.services.spokes')
+            ->findForHubDetailed($hub);
+
+        // unpack the spokes into a list of directions
+        $directions = [
+            'nw' => null,
+            'ne' => null,
+            'e'  => null,
+            'se' => null,
+            'sw' => null,
+            'w'  => null,
+        ];
+
+        foreach ($spokes as $spoke) {
+            /** @var Spoke $spoke */
+            $bearing = (string) $spoke->getRelativeBearing($hub);
+            $directions[$bearing] = [
+                'bearing' => $bearing,
+                'crossesTheVoid' => $spoke->crossesTheVoid(),
+                'distance' => $spoke->getDistance(),
+                'hub' => $spoke->getDestinationHub($hub)
+            ];
         }
 
-        return [
-            'type' => $position->getLocationType(),
-            'arrivalTime' => $position->getArrivalTimeData(),
-            'exitTime' => $position->getExitTimeData(),
-            'data' => [
-                'name' => $position->getLocation()->getName(),
-                'owner' => [
-                    'name' => 'johnn',
-                    'clan' => [
-                        'id' => 2342,
-                        'name' => 'dada'
-                    ]
-                ],
-                'isHaven' => false,
-                'cluster' => [
-                    'name' => $position->getLocation()->getClusterName()
-                ],
-                'paths' => [
-                    'nw' => $hubs[0] ?? null,
-                    'ne' => $hubs[1] ?? null,
-                    'e' => $hubs[2] ?? null,
-                    'se' => $hubs[3] ?? null,
-                    'sw' => $hubs[4] ?? null,
-                    'w' => $hubs[5] ?? null
-                ]
-            ]
-        ];
-    }
-
-    private function getHubInfo(Hub $hub, Hub $currentHub)
-    {
-        $hubCluster = $hub->getCluster();
-        $currentCluster = $currentHub->getCluster();
-        $crossingTheVoid = ($hubCluster->getId() != $currentCluster->getId());
-        $max = $crossingTheVoid ? 24: 5;
-
-        return [
-            'hub' => [
-                'name' => $hub->getName(),
-                'urlKey' => $hub->getUrlKey(),
-                'cluster' => $hub->getClusterName()
-            ],
-            'distance' => mt_rand(0,$max),
-            'crossingTheVoid' => $crossingTheVoid,
-        ];
-    }
-
-    private function getPlayerInformation(Player $player)
-    {
-        return [
-            'name' => $player->getNickname(),
-            'points' => $player->getPoints(),
-            'pointsTime' => $player->getPointsCalculationTime()->format('c'),
-            'pointsRate' => $player->getPointsRate(),
-        /*    'clan' => [
-                'id' => 1414,
-                'name' => 'Super Clan'
-            ],
-            'hubs' => [
-                [
-                    'playersPresent' => 4
-                ]
-            ],
-            'abilities' => [
-
-            ], */
-        ];
+        return $directions;
     }
 }

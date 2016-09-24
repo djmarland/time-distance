@@ -1,6 +1,6 @@
 import React from 'react';
-import Board from './Board';
-import Player from './Player';
+import Board from './GamePanel/Board';
+import Player from './GamePanel/Player';
 
 export default class Game extends React.Component {
     static get PANEL_BOARD() { return 'board'; }
@@ -52,7 +52,6 @@ export default class Game extends React.Component {
 
         return (
             <div className="game grid grid--flush">
-                <div className="g game__header">HEADER</div>
                 {panels}
             </div>
         );

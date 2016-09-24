@@ -2,9 +2,6 @@
 
 namespace GameService\Data\Database\Mapper;
 
-/**
- * Factory to create mappers as needed
- */
 class MapperFactory
 {
     public function createClusterMapper(): ClusterMapper
@@ -25,5 +22,10 @@ class MapperFactory
     public function createPositionMapper(): PositionMapper
     {
         return new PositionMapper($this);
+    }
+
+    public function createSpokeMapper(): SpokeMapper
+    {
+        return new SpokeMapper($this);
     }
 }

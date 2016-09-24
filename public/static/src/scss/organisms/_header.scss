@@ -1,0 +1,25 @@
+.header {
+    padding: $size-grid-unit-tiny;
+    height: $size-header-height;
+    background: #000;
+    color: #fff;
+}
+
+.header__player {
+    @extend .text--right;
+}
+
+.header__settings {
+    display: inline-block;
+    width: 24px;
+    vertical-align: top;
+    margin-left: $size-grid-unit;
+}
+
+.header__settings-icon {
+    fill: currentColor;
+}
+
+.header__points {
+    margin-right: $size-grid-unit;
+}

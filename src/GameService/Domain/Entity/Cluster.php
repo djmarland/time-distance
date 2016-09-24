@@ -2,7 +2,7 @@
 
 namespace GameService\Domain\Entity;
 
-class Cluster extends Entity
+class Cluster extends Entity implements \JsonSerializable
 {
     private $name;
 
@@ -18,5 +18,12 @@ class Cluster extends Entity
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'name' => $this->getName(),
+        ];
     }
 }

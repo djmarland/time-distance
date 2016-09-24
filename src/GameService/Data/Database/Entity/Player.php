@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks()
  * @ORM\Table(name="players",indexes={@ORM\Index(name="player_nickname_idx", columns={"nickname"})})
+ * @ORM\Entity(repositoryClass="GameService\Data\Database\EntityRepository\PlayerRepository")
  */
 class Player extends Entity
 {

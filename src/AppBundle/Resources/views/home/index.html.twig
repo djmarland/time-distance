@@ -1,11 +1,23 @@
 {% extends 'AppBundle::base.html.twig' %}
 
-
 {% block body %}
-<h1>Hello</h1>
+<h1>Time & Distance</h1>
+    <p>Here's where we tell you all about it</p>
+    <p><a href="{{ path('play') }}">Play now</a></p>
+
+    <p>Show some live updating stats with links to more, such as:</p>
+    <ul>
+        <li>Movements just made</li>
+        <li>Attacks happening</li>
+        <li>etc</li>
+    </ul>
+
 {% endblock %}
 
 {% block footerScripts %}
-    <script src="{{ 'vendor.js'|asset_path }}"></script>
-    <script src="{{ 'game.js'|asset_path }}"></script>
+    {% if allowRedirect %}
+    <script>
+        document.write('<p>TODO - Redirect (via JavaScript) if you are already logged in</p>');
+    </script>
+    {% endif %}
 {% endblock %}

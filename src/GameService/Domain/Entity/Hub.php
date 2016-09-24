@@ -4,7 +4,7 @@ namespace GameService\Domain\Entity;
 
 use GameService\Domain\Exception\DataNotFetchedException;
 
-class Hub extends Entity
+class Hub extends Entity implements \JsonSerializable
 {
     private $name;
     private $urlKey;
@@ -68,5 +68,21 @@ class Hub extends Entity
     public function isHaven(): bool
     {
         return $this->isHaven;
+    }
+
+    public function getUrl(): string
+    {
+        return '/hubs/' . $this->getUrlKey();
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'type' => 'hub',
+            'url' => $this->getUrl(),
+            'name' => $this->getName(),
+            'isHaven' => $this->isHaven(),
+            'cluster' => $this->getCluster(),
+        ];
     }
 }

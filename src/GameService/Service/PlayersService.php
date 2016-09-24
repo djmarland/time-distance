@@ -2,11 +2,16 @@
 
 namespace GameService\Service;
 
+use DateTimeImmutable;
+use Doctrine\ORM\QueryBuilder;
 use Exception;
-use GameService\Data\Database\Entity\Hub;
+use GameService\Data\Database\Entity\Hub as HubEntity;
 use GameService\Data\Database\Entity\Player as PlayerEntity;
+use GameService\Data\Database\Entity\Spoke as SpokeEntity;
 use GameService\Data\Database\Entity\Position;
+use GameService\Domain\Entity\Hub;
 use GameService\Domain\Entity\Player;
+use GameService\Domain\Entity\Spoke;
 use GameService\Domain\Exception\EntityNotFoundException;
 use GameService\Domain\ValueObject\Nickname;
 
@@ -14,9 +19,79 @@ class PlayersService extends Service
 {
     const ENTITY = 'Player';
 
+    public function findAll()
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('Player')
+            ->orderBy('Player.nickname');
+
+        return $this->getPlayersResult($qb);
+    }
+
+    public function countAll()
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('count(Player)');
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function countThoseInHubs()
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('count(Player)')
+            ->leftJoin(
+                'GameService:Position',
+                'Position',
+                \Doctrine\ORM\Query\Expr\Join::WITH,
+                'Position.player = Player'
+            )
+            ->andWhere('Position.completedTime IS NULL')
+            ->andWhere('Position.hub IS NOT NULL');
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function countThoseInHavenHubs()
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('count(Player)')
+            ->leftJoin(
+                'GameService:Position',
+                'Position',
+                \Doctrine\ORM\Query\Expr\Join::WITH,
+                'Position.player = Player'
+            )
+            ->join('Position.hub', 'Hub')
+            ->andWhere('Position.completedTime IS NULL')
+            ->andWhere('Hub.isHaven = true');
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function countThoseTravelling()
+    {
+        return 0;
+//        $qb = $this->getQueryBuilder(self::ENTITY);
+//        $qb->select('count(Player.id)');
+//        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function totalPoints()
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('sum(Player.points)');
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function overallPointRate()
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('sum(Player.pointsRate)');
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
     public function findByNickname(
         string $nickname
-    ): Player {
+    ): Player
+    {
         $qb = $this->getQueryBuilder(self::ENTITY);
         $qb->select('Player')
             ->where('Player.nickname = :nickname')
@@ -29,9 +104,33 @@ class PlayersService extends Service
             ->getDomainModel(reset($result));
     }
 
+    public function findInHub(
+        Hub $hub
+        // todo - paginate this to sensible number
+    )
+    {
+
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('Player')
+            ->leftJoin(
+                'GameService:Position',
+                'Position',
+                \Doctrine\ORM\Query\Expr\Join::WITH,
+                'Position.player = Player'
+            )
+            ->join('Position.hub', 'Hub')
+            ->where('Hub = :hubId')
+            ->andWhere('Position.completedTime IS NULL')
+            ->orderBy('Player.nickname')
+            ->setParameter('hubId', $hub->getId());
+
+        return $this->getPlayersResult($qb);
+    }
+
     public function newPlayer(
         string $nickname
-    ): Player {
+    ): Player
+    {
         $nickname = Nickname::validate($nickname);
 
         $now = $this->appTimeProvider;
@@ -72,21 +171,21 @@ class PlayersService extends Service
         return $this->findByNickname($nickname);
     }
 
-    public function movePlayerToHub(Player $player, string $hubKey)
+    public function movePlayerToHub(Player $player, Hub $hub)
     {
         // todo - move these to EntityRepos
-        /** @var Hub $hub */
+        /** @var PlayerEntity $playerEntity */
         $playerEntity = $this->getQueryBuilder('Player')
             ->select('Player')
             ->where('Player.id = :id')
             ->setParameter('id', $player->getId())
             ->getQuery()->getOneOrNullResult();
 
-        /** @var Hub $hub */
-        $hub = $this->getQueryBuilder('Hub')
+        /** @var HubEntity $hubEntity */
+        $hubEntity= $this->getQueryBuilder('Hub')
             ->select('Hub')
-            ->where('Hub.urlKey = :urlKey')
-            ->setParameter('urlKey', $hubKey)
+            ->where('Hub = :hub')
+            ->setParameter('hub', $hub->getId())
             ->getQuery()->getOneOrNullResult();
 
         // get current position
@@ -108,7 +207,7 @@ class PlayersService extends Service
             $this->entityManager->persist($position);
 
             // make a new position
-            $newPosition = new Position($playerEntity, $this->appTimeProvider, $hub);
+            $newPosition = new Position($playerEntity, $this->appTimeProvider, $hubEntity);
             $this->entityManager->persist($newPosition);
 
             // todo - calculate new point rate
@@ -123,7 +222,71 @@ class PlayersService extends Service
         }
     }
 
-    private function fetchRandomHavenHubEntity(): Hub
+    public function movePlayerToSpoke(
+        Player $player,
+        Spoke $spoke,
+        DateTimeImmutable $endTime,
+        bool $reverseDirection
+    ) {
+        // todo - move these to EntityRepos
+        /** @var PlayerEntity $playerEntity */
+        $playerEntity = $this->getEntity('Player')->findByDbId($player->getId());
+
+        /** @var SpokeEntity $spokeEntity */
+        $spokeEntity= $this->getQueryBuilder('Spoke')
+            ->select('Spoke')
+            ->where('Spoke = :spoke')
+            ->setParameter('spoke', $spoke->getId())
+            ->getQuery()->getOneOrNullResult();
+
+        // get current position
+        /** @var Position $position */
+        $position = $this->getQueryBuilder('Position')
+            ->select('Position')
+            ->where('Position.player = :playerId')
+            ->andWhere('Position.completedTime IS NULL')
+            ->setParameter('playerId', $player->getId())
+            ->setMaxResults(1)
+            ->getQuery()->getOneOrNullResult();
+
+        // start transaction
+        $this->entityManager->beginTransaction();
+
+        try {
+            // close old position
+            $position->setCompletedTime($this->appTimeProvider);
+            $this->entityManager->persist($position);
+
+            // make a new position
+            $newPosition = new Position($playerEntity, $this->appTimeProvider, $spokeEntity);
+            $newPosition->setReverseDirection($reverseDirection);
+            $newPosition->setEndTime($endTime);
+            $this->entityManager->persist($newPosition);
+
+            // todo - calculate new point rate
+
+            // complete the transaction
+            $this->entityManager->flush();
+            $this->commit();
+        } catch (Exception $e) {
+            // rollback and rethrow
+            $this->rollback();
+            throw $e;
+        }
+    }
+
+    private function getPlayersResult(QueryBuilder $qb): array
+    {
+        $result = $qb->getQuery()->getArrayResult();
+        $players = [];
+        $mapper = $this->mapperFactory->createPlayerMapper();
+        foreach ($result as $player) {
+            $players[] = $mapper->getDomainModel($player);
+        }
+        return $players;
+    }
+
+    private function fetchRandomHavenHubEntity(): HubEntity
     {
         // first we need to know how many hubs we have
         $number = $this->getQueryBuilder('Hub')

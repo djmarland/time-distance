@@ -5,20 +5,33 @@
     <title>{{ meta.fullTitle }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ 'styles.css'|asset_path }}" />
+    <link href="https://fonts.googleapis.com/css?family=Baloo+Bhai" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Baloo Bhai', cursive!important;
+        }
+    </style>
 </head>
 <body class="{% block bodyClass %}{% endblock %}" data-env="{{ meta.environment }}">
 {% include '@partials/_icons.html.twig' %}
-<div class="body-area" id="app-container">
-<header><div class="header">
-    Header
-</div></header>
-<main>
-    {% block body %}{% endblock %}
-</main>
-<footer><div class="footer">
-    Footer
-</div></footer>
+<div class="grid grid--flush">
+    <div class="header g"><header>
+        <div class="grid">
+            <div class="g 1/2">
+                Time &amp; Distance
+            </div>
+            <div class="g 1/2">
+                <div id="app-header"></div>
+            </div>
+        </div>
+    </header></div>
+    <div class="g"><main>
+        {% block body %}{% endblock %}
+    </main></div>
 </div>
-{% block footerScripts %}{% endblock %}
+{% block footerScripts %}
+    <script src="{{ 'vendor.js'|asset_path }}"></script>
+    <script src="{{ 'bootstrap.js'|asset_path }}"></script>
+{% endblock %}
 </body>
 </html>

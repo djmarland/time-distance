@@ -10,7 +10,7 @@ class PositionMapper extends Mapper
     {
         $player = null;
         if (isset($item['player'])) {
-            $player = $this->mapperFactory->createHubMapper()
+            $player = $this->mapperFactory->createPlayerMapper()
                 ->getDomainModel($item['player']);
         }
 
@@ -19,7 +19,8 @@ class PositionMapper extends Mapper
             $location = $this->mapperFactory->createHubMapper()
                 ->getDomainModel($item['hub']);
         } elseif (isset($item['spoke'])) {
-            // todo
+            $location = $this->mapperFactory->createSpokeMapper()
+                ->getDomainModel($item['spoke']);
         }
 
         return new Position(
@@ -27,7 +28,8 @@ class PositionMapper extends Mapper
             $this->convertDateTime($item['startTime']),
             $this->convertDateTime($item['endTime']),
             $player,
-            $location
+            $location,
+            $item['reverseDirection']
         );
     }
 }

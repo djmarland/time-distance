@@ -1,0 +1,13 @@
+.points {
+
+}
+.points__icon {
+    display: inline-block;
+    vertical-align: top;
+    width: 14px;
+    height: 18px;
+    fill: currentColor;
+    margin-right: $size-grid-unit-small;
+    position: relative;
+    top: 3px;
+}

@@ -16,14 +16,6 @@ html {
 
 body {
     min-height: 100%;
-}
-
-html {
-    // always make the scroll-bar visible (so no page jump between pages)
-    overflow-y: scroll;
-}
-
-body {
     padding: 0;
     font-family: $font-body;
 }

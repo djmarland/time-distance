@@ -6,22 +6,24 @@ use DateTimeImmutable;
 use GameService\Domain\Exception\DataNotFetchedException;
 use InvalidArgumentException;
 
-class Position extends Entity
+class Position extends Entity implements \JsonSerializable
 {
     private $player;
     private $location;
     private $startTime;
     private $endTime;
+    private $isReverseDirection;
 
     public function __construct(
         int $id,
         DateTimeImmutable $startTime,
         DateTimeImmutable $endTime = null,
         Player $player = null,
-        $location = null
+        $location = null,
+        $isReverseDirection = false
     ) {
         parent::__construct($id);
-        if ($location instanceof Hub || is_null($location)) {
+        if ($location instanceof Hub || $location instanceof Spoke || is_null($location)) {
             $this->location = $location;
         } else {
             throw new InvalidArgumentException('Location missing or not recognised');
@@ -30,6 +32,7 @@ class Position extends Entity
         $this->player = $player;
         $this->startTime = $startTime;
         $this->endTime = $endTime;
+        $this->isReverseDirection = $isReverseDirection;
     }
 
     public function getArrivalTime(): DateTimeImmutable
@@ -45,6 +48,11 @@ class Position extends Entity
     public function getExitTime(): DateTimeImmutable
     {
         return $this->endTime;
+    }
+
+    public function isReverseDirection(): bool
+    {
+        return $this->isReverseDirection;
     }
 
     public function getExitTimeData()
@@ -73,11 +81,26 @@ class Position extends Entity
         return ($this->location instanceof Hub);
     }
 
-    public function getLocationType()
+    public function getLocationType(): string
     {
         if ($this->isInHub()) {
             return 'hub';
         }
-        return '';
+        return 'spoke';
+    }
+
+    public function jsonSerialize()
+    {
+        $destination = null;
+        if (!$this->isInHub()) {
+            $destination = $this->getLocation()->getDestinationHubFromDirection($this->isReverseDirection());
+        }
+
+        return [
+            'isInHub' => $this->isInHub(),
+            'exitTime' => $this->getExitTimeData(),
+            'location' => $this->getLocation(),
+            'destination' => $destination,
+        ];
     }
 }

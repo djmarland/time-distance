@@ -24,7 +24,7 @@ class Controller extends BaseController implements ControllerInterface
 
     private $applicationTime;
 
-    protected $cacheTime = null; // todo - disable cache for now
+    protected $cacheTime = 60; // default cache time
 
     /** Setup common tasks for a controller */
     public function initialize(Request $request)

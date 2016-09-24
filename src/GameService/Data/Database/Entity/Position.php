@@ -27,6 +27,9 @@ class Position extends Entity
     /** @ORM\Column(type="datetime", nullable=true) */
     private $lastPointsCalculationTime;
 
+    /** @ORM\Column(type="boolean") */
+    private $reverseDirection = false;
+
     /**
      * @ORM\ManyToOne(targetEntity="Player")
      * @ORM\JoinColumn(onDelete="CASCADE")
@@ -39,6 +42,12 @@ class Position extends Entity
      */
     private $hub;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="Spoke")
+     * @ORM\JoinColumn(nullable=true, onDelete="SET NULL")
+     */
+    private $spoke;
+
     public function __construct(
         Player $player,
         DateTimeImmutable $startTime,
@@ -46,6 +55,8 @@ class Position extends Entity
     ) {
         if ($locationEntity instanceof Hub) {
             $this->hub = $locationEntity;
+        } elseif ($locationEntity instanceof Spoke) {
+            $this->spoke = $locationEntity;
         } else {
             throw new InvalidArgumentException('Position must have a location entity: Hub or Spoke');
         }
@@ -104,11 +115,29 @@ class Position extends Entity
         return $this->player;
     }
 
+    public function getReverseDirection()
+    {
+        return $this->reverseDirection;
+    }
+
+    public function setReverseDirection(bool $reverseDirection)
+    {
+        return $this->reverseDirection = $reverseDirection;
+    }
+
     /**
      * @return Hub|null
      */
     public function getHub()
     {
         return $this->hub;
+    }
+
+    /**
+     * @return Spoke|null
+     */
+    public function getSpoke()
+    {
+        return $this->spoke;
     }
 }

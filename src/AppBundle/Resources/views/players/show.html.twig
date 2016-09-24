@@ -1,0 +1,22 @@
+{% extends 'AppBundle::base.html.twig' %}
+
+{% block body %}
+    <div id="app-player" data-initial="{{ feedData|json_encode }}">
+        <div>
+            <h1 class="g-unit">{{ player.nickname }}</h1>
+            <p>{{ player.pointsEstimateString }}</p>
+            <h2>Clan</h2>
+            <p>Not a clan member</p>
+            <h2>Current Location</h2>
+                {% if position.isInHub %}
+                    <div>
+                        <h3><a href="{{ position.location.url }}">{{ position.location.name }}</a></h3>
+                        <p>{{ position.location.cluster.name }}</p>
+                    </div>
+                {% else %}
+                    <p>Travelling</p>
+                {% endif %}
+            <h2>Hubs owned</h2>
+        </div>
+    </div>
+{% endblock %}

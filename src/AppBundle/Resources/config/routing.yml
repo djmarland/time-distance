@@ -1,10 +1,14 @@
-home:
+root:
   path:     /
-  defaults: { _controller: AppBundle:Home:index }
+  defaults: { _controller: AppBundle:Home:index, allowRedirect: true }
 
-game_status:
-  path:     /status.json
-  defaults: { _controller: AppBundle:Game:status }
+intro:
+  path:     /intro
+  defaults: { _controller: AppBundle:Home:index, allowRedirect: false }
+
+stats:
+  path:     /stats
+  defaults: { _controller: AppBundle:Home:stats }
 
 hub_list:
   path:     /hubs
@@ -14,10 +18,26 @@ hub_show:
   path:     /hubs/{urlKey}.{format}
   defaults: { _controller: AppBundle:Hubs:show, format: null }
 
+player_list:
+  path:     /players
+  defaults: { _controller: AppBundle:Players:list, format: null }
+
+player_show:
+  path:     /players/{nickname}.{format}
+  defaults: { _controller: AppBundle:Players:show, format: null }
+
+play:
+  path:     /play
+  defaults: { _controller: AppBundle:Game:play }
+
+game_status:
+  path:     /play/status.json
+  defaults: { _controller: AppBundle:Game:status }
+
 action_new_player:
-  path:     /action/new-player.json
+  path:     /play/new-player.json
   defaults: { _controller: AppBundle:Game:newPlayer }
 
 action_make_move:
-  path:     /action/make-move.json
+  path:     /play/move.json
   defaults: { _controller: AppBundle:Game:makeMove }

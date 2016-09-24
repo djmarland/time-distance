@@ -6,7 +6,7 @@ use DateTimeImmutable;
 use GameService\Domain\Exception\DataNotFetchedException;
 use GameService\Domain\ValueObject\Nickname;
 
-class Player extends Entity
+class Player extends Entity implements \JsonSerializable
 {
     private $nickname;
     private $points;
@@ -57,5 +57,36 @@ class Player extends Entity
             throw new DataNotFetchedException('Tried to fetch home hub but the data was not available');
         }
         return $this->homeHub;
+    }
+
+    public function getUrl(): string
+    {
+        return '/players/' . (string) $this->getNickname();
+    }
+
+    public function getPointsEstimate(): float
+    {
+        $now = new DateTimeImmutable(); // todo - inject this somehow?
+        $diff = $now->format('U') - $this->pointsCalculationTime->format('U');
+
+        return $this->getPoints() + ($diff * $this->getPointsRate());
+    }
+
+    public function getPointsEstimateString(): string
+    {
+        $points = $this->getPointsEstimate();
+        return number_format($points);
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'nickname' => $this->getNickname(),
+            'url' => $this->getUrl(),
+            'points' => $this->getPoints(),
+            'pointsRate' => $this->getPointsRate(),
+            'pointsCalculationTime' => $this->getPointsCalculationTime()->format('c'),
+            'pointsEstimate' => $this->getPointsEstimate()
+        ];
     }
 }

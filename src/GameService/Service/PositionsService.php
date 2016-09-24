@@ -14,10 +14,17 @@ class PositionsService extends Service
         Player $player
     ): Position {
         $qb = $this->getQueryBuilder(self::ENTITY);
-        $qb->select('Position', 'Hub', 'Cluster')
+        $qb->select(
+            'Position', 'Hub', 'Spoke', 'Cluster', 'SpokeStartHub',
+            'SpokeEndHub', 'SpokeStartCluster', 'SpokeEndCluster'
+            )
             ->leftJoin('Position.hub', 'Hub')
             ->leftJoin('Hub.cluster', 'Cluster')
-//            ->leftJoin('Position.Spoke', 'Spoke')
+            ->leftJoin('Position.spoke', 'Spoke')
+            ->leftJoin('Spoke.startHub', 'SpokeStartHub')
+            ->leftJoin('SpokeStartHub.cluster', 'SpokeStartCluster')
+            ->leftJoin('Spoke.endHub', 'SpokeEndHub')
+            ->leftJoin('SpokeEndHub.cluster', 'SpokeEndCluster')
             ->where('Position.player = :playerId')
             ->andWhere('Position.completedTime IS NULL')
             ->setParameter('playerId', $player->getId())

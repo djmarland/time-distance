@@ -29,6 +29,10 @@ var createVendor = function(sources) {
         .pipe(gulp.dest(staticPathDist));
 };
 
+var packageGame = function(bootstrap) {
+
+};
+
 gulp.task('vendor', function() {
     return createVendor(vendorSrc.prod);
 });
@@ -37,9 +41,9 @@ gulp.task('vendor-dev', function() {
     return createVendor(vendorSrc.dev);
 });
 
-gulp.task('js-game', function () {
+gulp.task('js-bootstrap', function() {
     var appBundler = browserify({
-        entries: staticPathSrc + 'js/game.jsx',
+        entries: [staticPathSrc + 'js/bootstrap.jsx'],
         extensions: ['.jsx'],
         debug: false
     })
@@ -48,7 +52,7 @@ gulp.task('js-game', function () {
         .require('./' + staticPathSrc + 'js/import-react-dom.js', {expose: 'react-dom'});
 
     return appBundler.bundle()
-        .pipe(source('game.js'))
+        .pipe(source('bootstrap.js'))
         .pipe(gulp.dest(staticPathDist));
 });
 
@@ -61,7 +65,7 @@ gulp.task('sass', function() {
 
 gulp.task('watch',function() {
     gulp.watch(staticPathSrc + 'scss/**/*.scss',['sass']);
-    gulp.watch(staticPathSrc + 'js/**/*.jsx',['js-game']);
+    gulp.watch(staticPathSrc + 'js/**/*.jsx',['js-bootstrap']);
 });
 
 

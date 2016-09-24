@@ -17,12 +17,13 @@ class Nickname implements \JsonSerializable
 
     public static function validate(string $nickname): string
     {
+        $nickname = strtolower($nickname);
         if (!preg_match('/[a-z0-9]{1,30}/i', $nickname)) {
             throw new InvalidNicknameException(
                 'Nickname can only use letters, numbers, and dashes; between 1 and 30 characters'
             );
         }
-        return strtolower($nickname);
+        return $nickname;
     }
 
     public function getValue(): string
