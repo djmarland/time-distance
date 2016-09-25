@@ -3,6 +3,7 @@
 namespace GameService\Service;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\QueryBuilder;
 use Exception;
 use GameService\Data\Database\Entity\Hub as HubEntity;
@@ -198,19 +199,29 @@ class PlayersService extends Service
             ->setMaxResults(1)
             ->getQuery()->getOneOrNullResult();
 
+        // we need to save the players accurate score
+        // coming from a spoke all times were based on the previous position end time
+        $calculationTime = $position->getEndTime();
+
+        $playerEntity = $this->updatePlayerScore($playerEntity, $calculationTime);
+
+        // we're moving from a hub to a spoke. The point rate loses 1
+        $pointRate = $playerEntity->getPointsRate() - 1;
+        $playerEntity->setPointsRate($pointRate);
+
         // start transaction
         $this->entityManager->beginTransaction();
 
         try {
             // close old position
-            $position->setCompletedTime($this->appTimeProvider);
+            $position->setCompletedTime($calculationTime);
             $this->entityManager->persist($position);
 
             // make a new position
-            $newPosition = new Position($playerEntity, $this->appTimeProvider, $hubEntity);
+            $newPosition = new Position($playerEntity, $calculationTime, $hubEntity);
             $this->entityManager->persist($newPosition);
 
-            // todo - calculate new point rate
+            $this->entityManager->persist($playerEntity);
 
             // complete the transaction
             $this->entityManager->flush();
@@ -249,6 +260,13 @@ class PlayersService extends Service
             ->setMaxResults(1)
             ->getQuery()->getOneOrNullResult();
 
+        // we need to save the players accurate score
+        $playerEntity = $this->updatePlayerScore($playerEntity);
+
+        // we're moving from a hub to a spoke. The point rate gains 1
+        $pointRate = $playerEntity->getPointsRate() + 1;
+        $playerEntity->setPointsRate($pointRate);
+
         // start transaction
         $this->entityManager->beginTransaction();
 
@@ -263,7 +281,7 @@ class PlayersService extends Service
             $newPosition->setEndTime($endTime);
             $this->entityManager->persist($newPosition);
 
-            // todo - calculate new point rate
+            $this->entityManager->persist($playerEntity);
 
             // complete the transaction
             $this->entityManager->flush();
@@ -273,6 +291,21 @@ class PlayersService extends Service
             $this->rollback();
             throw $e;
         }
+    }
+
+    private function updatePlayerScore(PlayerEntity $player, DateTimeInterface $time = null): PlayerEntity
+    {
+        if (!$time) {
+            $time = $this->appTimeProvider;
+        }
+
+        $secondsBetween = $time->format('U') - $player->getPointsCalculationTime()->format('U');
+        $pointsEarned = $player->getPoints() + ($secondsBetween * $player->getPointsRate());
+
+        $player->setPoints($pointsEarned);
+        $player->setPointsCalculationTime($time);
+
+        return $player;
     }
 
     private function getPlayersResult(QueryBuilder $qb): array

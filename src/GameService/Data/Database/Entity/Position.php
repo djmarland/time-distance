@@ -1,7 +1,7 @@
 <?php
 namespace GameService\Data\Database\Entity;
 
-use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 
@@ -11,6 +11,8 @@ use InvalidArgumentException;
  * @ORM\Table(name="positions",indexes={
  *     @ORM\Index(name="position_player_idx", columns={"player_id"}),
  *     @ORM\Index(name="position_hub_idx", columns={"hub_id"}),
+ *     @ORM\Index(name="position_completed_time_idx", columns={"completed_time"}),
+ *     @ORM\Index(name="position_player_completed_time_idx", columns={"player_id","completed_time"}),
  * })
  */
 class Position extends Entity
@@ -50,7 +52,7 @@ class Position extends Entity
 
     public function __construct(
         Player $player,
-        DateTimeImmutable $startTime,
+        DateTimeInterface $startTime,
         $locationEntity
     ) {
         if ($locationEntity instanceof Hub) {
@@ -66,44 +68,44 @@ class Position extends Entity
     }
 
     /** Getters/Setters */
-    public function getStartTime(): DateTimeImmutable
+    public function getStartTime(): DateTimeInterface
     {
         return $this->startTime;
     }
 
-    public function setEndTime(DateTimeImmutable $endTime)
+    public function setEndTime(DateTimeInterface $endTime)
     {
         return $this->endTime = $endTime;
     }
 
     /**
-     * @return DateTimeImmutable|null
+     * @return DateTimeInterface|null
      */
     public function getEndTime()
     {
         return $this->endTime;
     }
 
-    public function setCompletedTime(DateTimeImmutable $completedTime)
+    public function setCompletedTime(DateTimeInterface $completedTime)
     {
         return $this->completedTime = $completedTime;
     }
 
     /**
-     * @return DateTimeImmutable|null
+     * @return DateTimeInterface|null
      */
     public function getCompletedTime()
     {
         return $this->completedTime;
     }
 
-    public function setLastPointsCalculationTime(DateTimeImmutable $time)
+    public function setLastPointsCalculationTime(DateTimeInterface $time)
     {
         return $this->time = $time;
     }
 
     /**
-     * @return DateTimeImmutable|null
+     * @return DateTimeInterface|null
      */
     public function getLastPointsCalculationTime()
     {

@@ -35,3 +35,32 @@
     background: brown;
 }
 
+.game__travelling {
+    padding: $size-grid-unit;
+}
+
+.game__travelling-map {
+    height: 60px;
+    position: relative;
+    background: #ffffff; /* Old browsers */
+    background: -webkit-linear-gradient(top, #000 0, #000 32px, transparent 32px);
+    background: linear-gradient(to bottom, #000 0, #000 32px, transparent 32px);
+    background-position: 0 12px;
+    background-repeat: no-repeat;
+}
+
+.game__travelling-position {
+    position: absolute;
+    top: 22px;
+    left: 0;
+    z-index: 2;
+    color: red;
+}
+
+.game__travelling-hub {
+    width: 100%;
+}
+
+.game__travelling-hubname {
+    padding: 0 $size-grid-unit;
+}

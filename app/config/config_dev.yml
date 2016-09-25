@@ -2,7 +2,7 @@ imports:
     - { resource: config.yml }
 
 parameters:
-    distance_multiplier: 36 # seconds per distance unit (note: 0 = fixed 60 seconds)
+    distance_multiplier: 6 # seconds per distance unit (note: 0 = 1/60)
     locale: en
 
 framework:

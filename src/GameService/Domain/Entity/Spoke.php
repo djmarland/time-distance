@@ -70,12 +70,28 @@ class Spoke extends Entity implements \JsonSerializable
         return $this->getStartHub();
     }
 
+    public function getOriginHub(Hub $hub)
+    {
+        if ($this->getStartHub()->getId() == $hub->getId()) {
+            return $this->getStartHub();
+        }
+        return $this->getEndHub();
+    }
+
     public function getDestinationHubFromDirection($reversed = true)
     {
         if ($reversed) {
             return $this->getStartHub();
         }
         return $this->getEndHub();
+    }
+
+    public function getOriginHubFromDirection($reversed = true)
+    {
+        if ($reversed) {
+            return $this->getEndHub();
+        }
+        return $this->getStartHub();
     }
 
     public function isReverseDirection(Hub $hub)

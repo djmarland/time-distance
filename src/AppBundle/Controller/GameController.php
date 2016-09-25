@@ -17,7 +17,15 @@ class GameController extends Controller
 
     public function playAction()
     {
+        $this->setPlayerPosition($this->getPlayer());
         return $this->renderTemplate('game:play');
+    }
+
+    public function arrivalAction()
+    {
+        // todo - this is temporary. find a better way
+        $this->setPlayerPosition($this->getPlayer());
+        return $this->renderStatus();
     }
 
     public function newPlayerAction()
@@ -107,7 +115,12 @@ class GameController extends Controller
 
     public function statusAction()
     {
-        $player = $this->getPlayer();
+        return $this->renderStatus();
+    }
+
+    private function setPlayerPosition(Player $player)
+    {
+        // todo - safety checks to ensure this can only be done one at a time per player
         $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
 
         if (!$position->isInHub()) {
@@ -119,8 +132,6 @@ class GameController extends Controller
                 );
             }
         }
-
-        return $this->renderStatus();
     }
 
     private function renderStatus()

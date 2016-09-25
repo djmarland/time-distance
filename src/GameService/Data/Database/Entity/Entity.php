@@ -1,6 +1,7 @@
 <?php
 namespace GameService\Data\Database\Entity;
 
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use DateTimeImmutable;
 
@@ -26,12 +27,12 @@ abstract class Entity
         return (int) $this->id;
     }
 
-    public function getCreatedAt(): DateTimeImmutable
+    public function getCreatedAt(): DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): DateTimeImmutable
+    public function getUpdatedAt(): DateTimeInterface
     {
         return $this->updatedAt;
     }

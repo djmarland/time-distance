@@ -1,0 +1,39 @@
+$location-color: #75a8e2;
+
+@keyframes LOCATION-PULSE {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+        left: 6px;
+        top: 6px;
+    }
+    100% {
+        width: 80px;
+        height: 80px;
+        opacity: 0;
+        left: -34px;
+        top: -34px;
+    }
+}
+
+.location {
+    display: block;
+    height: 12px;
+    width: 12px;
+    border-radius: 100%;
+    background: $location-color;
+    position: relative;
+
+    &:after {
+        content: '';
+        display: block;
+        border-radius: 100%;
+        border: solid 2px $location-color;
+        position: absolute;
+        opacity: 1;
+        top: 50%;
+        left: 50%;
+        animation: LOCATION-PULSE 4s ease-out infinite;
+    }
+}

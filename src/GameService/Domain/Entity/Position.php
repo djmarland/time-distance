@@ -92,15 +92,19 @@ class Position extends Entity implements \JsonSerializable
     public function jsonSerialize()
     {
         $destination = null;
+        $origin = null;
         if (!$this->isInHub()) {
             $destination = $this->getLocation()->getDestinationHubFromDirection($this->isReverseDirection());
+            $origin = $this->getLocation()->getOriginHubFromDirection($this->isReverseDirection());
         }
 
         return [
             'isInHub' => $this->isInHub(),
+            'entryTime' => $this->getArrivalTimeData(),
             'exitTime' => $this->getExitTimeData(),
             'location' => $this->getLocation(),
             'destination' => $destination,
+            'origin' => $origin,
         ];
     }
 }

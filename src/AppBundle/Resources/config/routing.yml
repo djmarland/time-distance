@@ -30,6 +30,11 @@ play:
   path:     /play
   defaults: { _controller: AppBundle:Game:play }
 
+# temporary
+arrival:
+  path:     /play/arrival.json
+  defaults: { _controller: AppBundle:Game:arrival }
+
 game_status:
   path:     /play/status.json
   defaults: { _controller: AppBundle:Game:status }

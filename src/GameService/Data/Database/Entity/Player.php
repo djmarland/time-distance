@@ -1,7 +1,7 @@
 <?php
 namespace GameService\Data\Database\Entity;
 
-use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -36,7 +36,7 @@ class Player extends Entity
         string $nickname,
         float $points,
         float $pointsRate,
-        DateTimeImmutable $pointsCalculationTime,
+        DateTimeInterface $pointsCalculationTime,
         Hub $homehub
     ) {
         $this->nickname = $nickname;
@@ -72,12 +72,12 @@ class Player extends Entity
         return $this->pointsRate;
     }
 
-    public function setPointsCalculationTime(DateTimeImmutable $pointsCalculationTime)
+    public function setPointsCalculationTime(DateTimeInterface $pointsCalculationTime)
     {
         $this->pointsCalculationTime = $pointsCalculationTime;
     }
 
-    public function getPointsCalculationTime(): DateTimeImmutable
+    public function getPointsCalculationTime(): DateTimeInterface
     {
         return $this->pointsCalculationTime;
     }

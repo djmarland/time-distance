@@ -308,7 +308,9 @@ var Board = function (_GamePanel) {
                     React.createElement(
                         'div',
                         { className: 'g' },
-                        React.createElement(BoardLocationSpoke, { position: gameState.position })
+                        React.createElement(BoardLocationSpoke, {
+                            onGameStateChange: this.updateGlobalGameState.bind(this),
+                            position: gameState.position })
                     )
                 );
             }
@@ -527,7 +529,8 @@ var BoardLocationSpoke = function (_React$Component3) {
 
         _this4.allowAnimationUpdate = false;
         _this4.state = {
-            timeLeft: null
+            timeLeft: null,
+            positionStyle: null
         };
         return _this4;
     }
@@ -542,6 +545,25 @@ var BoardLocationSpoke = function (_React$Component3) {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
             this.allowAnimationUpdate = false;
+        }
+    }, {
+        key: 'arrival',
+        value: function arrival() {
+            _FetchJson2.default.getUrl('/play/arrival.json', function (newGameState) {
+                if (newGameState.position.isInHub) {
+                    this.props.onGameStateChange(newGameState);
+                } else {
+                    // try again (in case the JS is ahead of the server)
+                    this.arrival();
+                }
+            }.bind(this), function (e) {
+                // todo - better error handling!
+                var message = 'Error making move';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            });
         }
     }, {
         key: 'padNumber',
@@ -559,25 +581,31 @@ var BoardLocationSpoke = function (_React$Component3) {
 
             var now = new Date(),
                 calcTime = new Date(this.props.position.exitTime),
-                secondsDiff = Math.floor((calcTime.getTime() - now.getTime()) / 1000),
-                hours = Math.floor(secondsDiff / 3600),
-                hoursRem = secondsDiff - hours * 3600,
+                entryCalcTime = new Date(this.props.position.entryTime),
+                secondsDiff = (calcTime.getTime() - now.getTime()) / 1000,
+                roundedSecondsDiff = Math.floor(secondsDiff),
+                totalDiff = (calcTime.getTime() - entryCalcTime.getTime()) / 1000,
+                hours = Math.floor(roundedSecondsDiff / 3600),
+                hoursRem = roundedSecondsDiff - hours * 3600,
                 minutes = Math.floor(hoursRem / 60),
-                seconds = hoursRem - minutes * 60;
+                seconds = hoursRem - minutes * 60,
+                positionPercent = (totalDiff - secondsDiff) / totalDiff * 100,
+                positionStyle = { left: positionPercent + '%' };
 
             if (secondsDiff <= 0) {
                 this.setState({
-                    timeLeft: 0
+                    timeLeft: 0,
+                    positionStyle: { left: '100%' }
                 });
-                // todo - actually go and fetch the status and updating inline rather than refreshing
-                window.location.reload();
+                this.arrival();
                 return;
             }
 
             var timeLeft = hours + ':' + this.padNumber(minutes) + ':' + this.padNumber(seconds);
 
             this.setState({
-                timeLeft: timeLeft
+                timeLeft: timeLeft,
+                positionStyle: positionStyle
             });
             window.requestAnimationFrame(this.updateTimeLeft.bind(this));
         }
@@ -585,47 +613,149 @@ var BoardLocationSpoke = function (_React$Component3) {
         key: 'render',
         value: function render() {
             var destination = this.props.position.destination,
+                origin = this.props.position.origin,
                 arrivalTime = void 0;
 
             if (this.state.timeLeft === 0) {
-                arrivalTime = React.createElement(
-                    'h1',
-                    null,
-                    'Arriving now....'
-                );
+                arrivalTime = 'now';
             } else {
-                arrivalTime = React.createElement(
-                    'h1',
-                    null,
-                    'Arriving in ',
-                    this.state.timeLeft
-                );
+                arrivalTime = this.state.timeLeft;
             }
 
             return React.createElement(
                 'div',
-                null,
+                { className: 'game__travelling grid' },
                 React.createElement(
-                    'h1',
-                    null,
-                    'Travelling'
+                    'div',
+                    { className: 'g' },
+                    React.createElement(
+                        'p',
+                        { className: 'a text--center' },
+                        'Travelling'
+                    )
                 ),
                 React.createElement(
-                    'h2',
-                    null,
-                    'Destination'
-                ),
-                React.createElement(
-                    'h3',
-                    null,
-                    destination.name
-                ),
-                React.createElement(
-                    'h4',
-                    null,
-                    destination.cluster.name
-                ),
-                arrivalTime
+                    'div',
+                    { className: 'g' },
+                    React.createElement(
+                        'div',
+                        { className: 'grid grid--flush' },
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/6 g--align-center' },
+                            React.createElement(
+                                'div',
+                                { className: 'text--right game__travelling-hubname' },
+                                React.createElement(
+                                    'h3',
+                                    null,
+                                    origin.name
+                                ),
+                                React.createElement(
+                                    'h4',
+                                    null,
+                                    origin.cluster.name
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/6 g--align-center' },
+                            React.createElement(
+                                'div',
+                                { className: 'game__travelling-hub' },
+                                React.createElement(
+                                    'svg',
+                                    {
+                                        viewBox: '0 0 104 120',
+                                        xmlns: 'http://www.w3.org/2000/svg' },
+                                    React.createElement('use', { xlinkHref: '#icon-hexagon' })
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/3 g--align-center' },
+                            React.createElement(
+                                'p',
+                                { className: 'text--center' },
+                                React.createElement(
+                                    'span',
+                                    { className: 'b' },
+                                    'Arriving'
+                                ),
+                                React.createElement('br', null),
+                                React.createElement(
+                                    'span',
+                                    { className: 'c' },
+                                    arrivalTime
+                                )
+                            ),
+                            React.createElement(
+                                'div',
+                                { className: 'game__travelling-map' },
+                                React.createElement('div', { className: 'game__travelling-line' }),
+                                React.createElement(
+                                    'div',
+                                    { className: 'game__travelling-position', style: this.state.positionStyle },
+                                    React.createElement('span', { className: 'location' })
+                                )
+                            ),
+                            React.createElement(
+                                'p',
+                                { className: 'text--center' },
+                                React.createElement(
+                                    'span',
+                                    { className: 'c' },
+                                    React.createElement(_Points2.default, {
+                                        value: 0,
+                                        time: this.props.position.entryTime,
+                                        rate: 1
+                                    })
+                                ),
+                                React.createElement('br', null),
+                                React.createElement(
+                                    'span',
+                                    { className: 'b' },
+                                    'Earned on this journey'
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/6 g--align-center' },
+                            React.createElement(
+                                'div',
+                                { className: 'game__travelling-hub' },
+                                React.createElement(
+                                    'svg',
+                                    {
+                                        viewBox: '0 0 104 120',
+                                        xmlns: 'http://www.w3.org/2000/svg' },
+                                    React.createElement('use', { xlinkHref: '#icon-hexagon' })
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/6 g--align-center' },
+                            React.createElement(
+                                'div',
+                                { className: 'game__travelling-hubname' },
+                                React.createElement(
+                                    'h3',
+                                    null,
+                                    destination.name
+                                ),
+                                React.createElement(
+                                    'h4',
+                                    null,
+                                    destination.cluster.name
+                                )
+                            )
+                        )
+                    )
+                )
             );
         }
     }]);

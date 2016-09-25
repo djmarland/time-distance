@@ -37,7 +37,9 @@ export default class Board extends GamePanel {
             return (
                 <div className="grid">
                     <div className="g">
-                        <BoardLocationSpoke position={gameState.position}  />
+                        <BoardLocationSpoke
+                            onGameStateChange={this.updateGlobalGameState.bind(this)}
+                            position={gameState.position} />
                     </div>
                 </div>
             );
@@ -166,7 +168,8 @@ class BoardLocationSpoke extends React.Component {
         super();
         this.allowAnimationUpdate = false;
         this.state = {
-            timeLeft : null
+            timeLeft : null,
+            positionStyle : null
         };
     };
 
@@ -177,6 +180,28 @@ class BoardLocationSpoke extends React.Component {
 
     componentWillUnmount() {
         this.allowAnimationUpdate = false;
+    }
+
+    arrival() {
+        FetchJson.getUrl(
+            '/play/arrival.json',
+            function(newGameState) {
+                if (newGameState.position.isInHub) {
+                    this.props.onGameStateChange(newGameState);
+                } else {
+                    // try again (in case the JS is ahead of the server)
+                    this.arrival();
+                }
+            }.bind(this),
+            function(e) {
+                // todo - better error handling!
+                let message = 'Error making move';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            }
+        );
     }
 
     padNumber(number) {
@@ -192,46 +217,110 @@ class BoardLocationSpoke extends React.Component {
 
         let now = new Date(),
             calcTime = new Date(this.props.position.exitTime),
-            secondsDiff = Math.floor((calcTime.getTime() - now.getTime()) / 1000),
-            hours = Math.floor(secondsDiff / 3600),
-            hoursRem = secondsDiff - (hours * 3600),
+            entryCalcTime = new Date(this.props.position.entryTime),
+            secondsDiff = (calcTime.getTime() - now.getTime()) / 1000,
+            roundedSecondsDiff = Math.floor(secondsDiff),
+            totalDiff = (calcTime.getTime() - entryCalcTime.getTime()) / 1000,
+            hours = Math.floor(roundedSecondsDiff / 3600),
+            hoursRem = roundedSecondsDiff - (hours * 3600),
             minutes = Math.floor(hoursRem / 60),
-            seconds = hoursRem - (minutes * 60);
+            seconds = hoursRem - (minutes * 60),
+            positionPercent = ((totalDiff - secondsDiff) / totalDiff) * 100,
+            positionStyle = {left:positionPercent + '%'};
+
 
         if (secondsDiff <= 0) {
             this.setState({
-                timeLeft : 0
+                timeLeft : 0,
+                positionStyle : {left:'100%'}
             });
-            // todo - actually go and fetch the status and updating inline rather than refreshing
-            window.location.reload();
+            this.arrival();
             return;
         }
 
         let timeLeft = hours + ':' + this.padNumber(minutes) + ':' + this.padNumber(seconds);
 
         this.setState({
-            timeLeft : timeLeft
+            timeLeft : timeLeft,
+            positionStyle : positionStyle
         });
         window.requestAnimationFrame(this.updateTimeLeft.bind(this));
     }
 
     render() {
         let destination = this.props.position.destination,
+            origin = this.props.position.origin,
             arrivalTime;
 
         if (this.state.timeLeft === 0) {
-            arrivalTime = (<h1>Arriving now....</h1>)
+            arrivalTime = 'now'
         } else {
-            arrivalTime = (<h1>Arriving in {this.state.timeLeft}</h1>);
+            arrivalTime = this.state.timeLeft;
         }
 
         return (
-            <div>
-                <h1>Travelling</h1>
-                <h2>Destination</h2>
-                <h3>{destination.name}</h3>
-                <h4>{destination.cluster.name}</h4>
-                {arrivalTime}
+            <div className="game__travelling grid">
+                <div className="g">
+                    <p className="a text--center">Travelling</p>
+                </div>
+                <div className="g">
+                <div className="grid grid--flush">
+                    <div className="g 1/6 g--align-center">
+                        <div className="text--right game__travelling-hubname">
+                            <h3>{origin.name}</h3>
+                            <h4>{origin.cluster.name}</h4>
+                        </div>
+                    </div>
+                    <div className="g 1/6 g--align-center">
+                        <div className="game__travelling-hub">
+                            <svg
+                                viewBox="0 0 104 120"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <use xlinkHref="#icon-hexagon" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="g 1/3 g--align-center">
+                        <p className="text--center">
+                            <span className="b">Arriving</span>
+                            <br />
+                            <span className="c">{arrivalTime}</span>
+                        </p>
+                        <div className="game__travelling-map">
+                            <div className="game__travelling-line"></div>
+                            <div className="game__travelling-position" style={this.state.positionStyle}>
+                                <span className="location"></span>
+                            </div>
+                        </div>
+                        <p className="text--center">
+                            <span className="c">
+                                <Points
+                                    value={0}
+                                    time={this.props.position.entryTime}
+                                    rate={1}
+                                />
+                            </span>
+                            <br />
+                            <span className="b">Earned on this journey</span>
+                        </p>
+                    </div>
+                    <div className="g 1/6 g--align-center">
+                        <div className="game__travelling-hub">
+                            <svg
+                                viewBox="0 0 104 120"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <use xlinkHref="#icon-hexagon" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="g 1/6 g--align-center">
+                        <div className="game__travelling-hubname">
+                            <h3>{destination.name}</h3>
+                            <h4>{destination.cluster.name}</h4>
+                        </div>
+                    </div>
+                </div>
+                </div>
             </div>
         );
     }
