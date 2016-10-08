@@ -12,7 +12,6 @@
 }
 
 .game__panel--active {
-    background: goldenrod;
     @include mq($until: xl) {
         height: calc(100vh - #{$size-header-height});
     }
@@ -20,17 +19,20 @@
 
 .game__panel--board {
     @include mq($from: xl) {
-        height: 50vh;
+        height: 64vh;
     }
 }
 .game__panel--player,
 .game__panel--abilities {
     background: green;
     @include mq($from: xl) {
-        height: calc(50vh - #{$size-header-height});
+        height: calc(36vh - #{$size-header-height});
     }
 }
 
+.game__panel--location {
+    background: goldenrod;
+}
 .game__panel--abilities {
     background: brown;
 }

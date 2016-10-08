@@ -78,6 +78,11 @@ class Player extends Entity implements \JsonSerializable
         return number_format($points);
     }
 
+    public function getMapRotationSteps(): int
+    {
+        return $this->getId() % 6;
+    }
+
     public function jsonSerialize()
     {
         return [

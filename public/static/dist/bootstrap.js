@@ -109,7 +109,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     }
 })();
 
-},{"./game/Game":2,"./game/Header":6,"./game/Hub":7,"./game/Player":8,"./utils/FetchJson":11,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
+},{"./game/Game":2,"./game/Header":8,"./game/Hub":9,"./game/Player":10,"./utils/FetchJson":13,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -234,7 +234,7 @@ var Game = function (_React$Component) {
 
 exports.default = Game;
 
-},{"./GamePanel/Board":3,"./GamePanel/Player":5,"react":"react"}],3:[function(require,module,exports){
+},{"./GamePanel/Board":3,"./GamePanel/Player":7,"react":"react"}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -254,6 +254,14 @@ var _FetchJson2 = _interopRequireDefault(_FetchJson);
 var _Points = require('../Utils/Points');
 
 var _Points2 = _interopRequireDefault(_Points);
+
+var _Spoke = require('./Board/Spoke');
+
+var _Spoke2 = _interopRequireDefault(_Spoke);
+
+var _Map = require('./Board/Map');
+
+var _Map2 = _interopRequireDefault(_Map);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -308,7 +316,7 @@ var Board = function (_GamePanel) {
                     React.createElement(
                         'div',
                         { className: 'g' },
-                        React.createElement(BoardLocationSpoke, {
+                        React.createElement(_Spoke2.default, {
                             onGameStateChange: this.updateGlobalGameState.bind(this),
                             position: gameState.position })
                     )
@@ -359,26 +367,17 @@ var Board = function (_GamePanel) {
 
             return React.createElement(
                 'div',
-                { className: 'grid' },
+                { className: 'grid grid--flat' },
                 React.createElement(
                     'div',
                     { className: 'g 1/2' },
-                    location,
-                    React.createElement('hr', null),
-                    React.createElement(
-                        'h2',
-                        null,
-                        'Hubs to choose from'
-                    ),
-                    React.createElement(
-                        'div',
-                        { className: 'grid' },
-                        hubOptions
-                    )
+                    React.createElement(_Map2.default, null)
                 ),
                 React.createElement(
                     'div',
-                    { className: 'g 1/2' },
+                    { className: 'g 1/2 game__panel--location' },
+                    location,
+                    React.createElement('hr', null),
                     playersPresent
                 )
             );
@@ -519,23 +518,221 @@ var BoardLocationHub = function (_React$Component2) {
     return BoardLocationHub;
 }(React.Component);
 
-var BoardLocationSpoke = function (_React$Component3) {
-    _inherits(BoardLocationSpoke, _React$Component3);
+},{"../../utils/FetchJson":13,"../Utils/Points":11,"./Board/Map":4,"./Board/Spoke":5,"./GamePanel":6}],4:[function(require,module,exports){
+'use strict';
 
-    function BoardLocationSpoke() {
-        _classCallCheck(this, BoardLocationSpoke);
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-        var _this4 = _possibleConstructorReturn(this, (BoardLocationSpoke.__proto__ || Object.getPrototypeOf(BoardLocationSpoke)).call(this));
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-        _this4.allowAnimationUpdate = false;
-        _this4.state = {
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Map = function (_React$Component) {
+    _inherits(Map, _React$Component);
+
+    function Map() {
+        _classCallCheck(this, Map);
+
+        var _this = _possibleConstructorReturn(this, (Map.__proto__ || Object.getPrototypeOf(Map)).call(this));
+
+        _this.hexRadius = 30;
+        _this.averageVerticalDiameter = 1.5 * _this.hexRadius;
+        _this.innerRadius = Math.sqrt(3) / 2 * _this.hexRadius;
+        _this.innerDiameter = _this.innerRadius * 2;
+        _this.state = {
+            containerHeight: null,
+            containerWidth: null
+        };
+        return _this;
+    }
+
+    _createClass(Map, [{
+        key: 'handleSize',
+        value: function handleSize() {
+            var _refs$mapContainer = this.refs.mapContainer;
+            var clientHeight = _refs$mapContainer.clientHeight;
+            var clientWidth = _refs$mapContainer.clientWidth;
+
+            this.setState({
+                containerHeight: clientHeight,
+                containerWidth: clientWidth
+            });
+        }
+    }, {
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            this.handleSize();
+            window.addEventListener('resize', this.handleSize.bind(this));
+        }
+    }, {
+        key: 'componentWillUnmount',
+        value: function componentWillUnmount() {
+            window.removeEventListener('resize', this.handleSize.bind(this));
+        }
+    }, {
+        key: 'hexPoints',
+        value: function hexPoints(xCoord, yCoord) {
+            var offset = Math.sqrt(3) * this.hexRadius / 2,
+                x = this.innerRadius + offset * xCoord * 2,
+                y = this.hexRadius + offset * yCoord * Math.sqrt(3),
+                points = [],
+                theta = void 0;
+            if (yCoord % 2 !== 0) x += offset;
+            for (theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
+                var pointX = x + this.hexRadius * Math.sin(theta);
+                var pointY = y + this.hexRadius * Math.cos(theta);
+                points.push(pointX + ',' + pointY);
+            }
+            return points.join(' ');
+        }
+    }, {
+        key: 'makeHexagonPolygon',
+        value: function makeHexagonPolygon(x, y, className) {
+            var coord = x + '-' + y;
+            return _react2.default.createElement('polygon', {
+                key: coord,
+                xmlns: 'http://www.w3.org/2000/svg',
+                points: this.hexPoints(x, y),
+                className: className });
+        }
+    }, {
+        key: 'drawGrid',
+        value: function drawGrid() {
+            var totalCol = Math.ceil(this.state.containerWidth / this.innerDiameter),
+                totalRow = Math.ceil(this.state.containerHeight / this.averageVerticalDiameter),
+                middleX = Math.floor(totalCol / 2) - 1,
+                middleY = Math.floor(totalRow / 2) - 1,
+                polygons = [],
+                col = void 0,
+                row = void 0;
+
+            // todo - calculate the visibility server-side
+            var revealed = [];
+            revealed[middleY - 2] = {};
+            revealed[middleY - 2][middleX - 1] = true;
+            revealed[middleY - 2][middleX] = true;
+            revealed[middleY - 2][middleX + 1] = true;
+
+            revealed[middleY - 1] = {};
+            revealed[middleY - 1][middleX - 2] = !(middleY % 2);
+            revealed[middleY - 1][middleX - 1] = true;
+            revealed[middleY - 1][middleX] = true;
+            revealed[middleY - 1][middleX + 1] = true;
+            revealed[middleY - 1][middleX + 2] = middleY % 2;
+
+            revealed[middleY] = {};
+            revealed[middleY][middleX - 2] = true;
+            revealed[middleY][middleX - 1] = true;
+            revealed[middleY][middleX] = true;
+            revealed[middleY][middleX + 1] = true;
+            revealed[middleY][middleX + 2] = true;
+
+            revealed[middleY + 1] = {};
+            revealed[middleY + 1][middleX - 2] = !(middleY % 2);
+            revealed[middleY + 1][middleX - 1] = true;
+            revealed[middleY + 1][middleX] = true;
+            revealed[middleY + 1][middleX + 1] = true;
+            revealed[middleY + 1][middleX + 2] = middleY % 2;
+
+            revealed[middleY + 2] = {};
+            revealed[middleY + 2][middleX - 1] = true;
+            revealed[middleY + 2][middleX] = true;
+            revealed[middleY + 2][middleX + 1] = true;
+
+            for (col = -1; col < totalCol; col++) {
+                for (row = -1; row < totalRow; row++) {
+                    var className = 'map__grid ';
+
+                    if (revealed[row] && revealed[row][col]) {
+                        className += 'map__grid--visible';
+                    }
+
+                    polygons.push(this.makeHexagonPolygon(col, row, className));
+                }
+            }
+            return polygons;
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var items = this.drawGrid();
+            return _react2.default.createElement(
+                'div',
+                { className: 'map', ref: 'mapContainer' },
+                _react2.default.createElement(
+                    'svg',
+                    { xmlns: 'http://www.w3.org/2000/svg',
+                        width: this.state.containerWidth,
+                        height: this.state.containerHeight },
+                    items
+                )
+            );
+        }
+    }]);
+
+    return Map;
+}(_react2.default.Component);
+
+exports.default = Map;
+
+},{"react":"react"}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _FetchJson = require('../../../utils/FetchJson');
+
+var _FetchJson2 = _interopRequireDefault(_FetchJson);
+
+var _Points = require('../../Utils/Points');
+
+var _Points2 = _interopRequireDefault(_Points);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Spoke = function (_React$Component) {
+    _inherits(Spoke, _React$Component);
+
+    function Spoke() {
+        _classCallCheck(this, Spoke);
+
+        var _this = _possibleConstructorReturn(this, (Spoke.__proto__ || Object.getPrototypeOf(Spoke)).call(this));
+
+        _this.allowAnimationUpdate = false;
+        _this.state = {
             timeLeft: null,
             positionStyle: null
         };
-        return _this4;
+        return _this;
     }
 
-    _createClass(BoardLocationSpoke, [{
+    _createClass(Spoke, [{
         key: 'componentWillMount',
         value: function componentWillMount() {
             this.allowAnimationUpdate = true;
@@ -553,7 +750,7 @@ var BoardLocationSpoke = function (_React$Component3) {
                 if (newGameState.position.isInHub) {
                     this.props.onGameStateChange(newGameState);
                 } else {
-                    // try again (in case the JS is ahead of the server)
+                    // try again (in case the JS is ahead of the server somehow)
                     this.arrival();
                 }
             }.bind(this), function (e) {
@@ -622,132 +819,132 @@ var BoardLocationSpoke = function (_React$Component3) {
                 arrivalTime = this.state.timeLeft;
             }
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { className: 'game__travelling grid' },
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: 'g' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'p',
                         { className: 'a text--center' },
                         'Travelling'
                     )
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: 'g' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'div',
                         { className: 'grid grid--flush' },
-                        React.createElement(
+                        _react2.default.createElement(
                             'div',
                             { className: 'g 1/6 g--align-center' },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'div',
                                 { className: 'text--right game__travelling-hubname' },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'h3',
                                     null,
                                     origin.name
                                 ),
-                                React.createElement(
+                                _react2.default.createElement(
                                     'h4',
                                     null,
                                     origin.cluster.name
                                 )
                             )
                         ),
-                        React.createElement(
+                        _react2.default.createElement(
                             'div',
                             { className: 'g 1/6 g--align-center' },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'div',
                                 { className: 'game__travelling-hub' },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'svg',
                                     {
                                         viewBox: '0 0 104 120',
                                         xmlns: 'http://www.w3.org/2000/svg' },
-                                    React.createElement('use', { xlinkHref: '#icon-hexagon' })
+                                    _react2.default.createElement('use', { xlinkHref: '#icon-hexagon' })
                                 )
                             )
                         ),
-                        React.createElement(
+                        _react2.default.createElement(
                             'div',
                             { className: 'g 1/3 g--align-center' },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'p',
                                 { className: 'text--center' },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'span',
                                     { className: 'b' },
                                     'Arriving'
                                 ),
-                                React.createElement('br', null),
-                                React.createElement(
+                                _react2.default.createElement('br', null),
+                                _react2.default.createElement(
                                     'span',
                                     { className: 'c' },
                                     arrivalTime
                                 )
                             ),
-                            React.createElement(
+                            _react2.default.createElement(
                                 'div',
                                 { className: 'game__travelling-map' },
-                                React.createElement('div', { className: 'game__travelling-line' }),
-                                React.createElement(
+                                _react2.default.createElement('div', { className: 'game__travelling-line' }),
+                                _react2.default.createElement(
                                     'div',
                                     { className: 'game__travelling-position', style: this.state.positionStyle },
-                                    React.createElement('span', { className: 'location' })
+                                    _react2.default.createElement('span', { className: 'location' })
                                 )
                             ),
-                            React.createElement(
+                            _react2.default.createElement(
                                 'p',
                                 { className: 'text--center' },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'span',
                                     { className: 'c' },
-                                    React.createElement(_Points2.default, {
+                                    _react2.default.createElement(_Points2.default, {
                                         value: 0,
                                         time: this.props.position.entryTime,
                                         rate: 1
                                     })
                                 ),
-                                React.createElement('br', null),
-                                React.createElement(
+                                _react2.default.createElement('br', null),
+                                _react2.default.createElement(
                                     'span',
                                     { className: 'b' },
                                     'Earned on this journey'
                                 )
                             )
                         ),
-                        React.createElement(
+                        _react2.default.createElement(
                             'div',
                             { className: 'g 1/6 g--align-center' },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'div',
                                 { className: 'game__travelling-hub' },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'svg',
                                     {
                                         viewBox: '0 0 104 120',
                                         xmlns: 'http://www.w3.org/2000/svg' },
-                                    React.createElement('use', { xlinkHref: '#icon-hexagon' })
+                                    _react2.default.createElement('use', { xlinkHref: '#icon-hexagon' })
                                 )
                             )
                         ),
-                        React.createElement(
+                        _react2.default.createElement(
                             'div',
                             { className: 'g 1/6 g--align-center' },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'div',
                                 { className: 'game__travelling-hubname' },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'h3',
                                     null,
                                     destination.name
                                 ),
-                                React.createElement(
+                                _react2.default.createElement(
                                     'h4',
                                     null,
                                     destination.cluster.name
@@ -760,10 +957,12 @@ var BoardLocationSpoke = function (_React$Component3) {
         }
     }]);
 
-    return BoardLocationSpoke;
-}(React.Component);
+    return Spoke;
+}(_react2.default.Component);
 
-},{"../../utils/FetchJson":11,"../Utils/Points":9,"./GamePanel":4}],4:[function(require,module,exports){
+exports.default = Spoke;
+
+},{"../../../utils/FetchJson":13,"../../Utils/Points":11,"react":"react"}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -828,7 +1027,7 @@ var GamePanel = function (_React$Component) {
 
 exports.default = GamePanel;
 
-},{"react":"react"}],5:[function(require,module,exports){
+},{"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -907,7 +1106,7 @@ var Player = function (_GamePanel) {
 
 exports.default = Player;
 
-},{"../Utils/Points":9,"./GamePanel":4}],6:[function(require,module,exports){
+},{"../Utils/Points":11,"./GamePanel":6}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1015,7 +1214,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"../utils/FetchJson":11,"./utils/Points":10,"react":"react"}],7:[function(require,module,exports){
+},{"../utils/FetchJson":13,"./utils/Points":12,"react":"react"}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1158,7 +1357,7 @@ var HubPlayer = function (_React$Component2) {
     return HubPlayer;
 }(_react2.default.Component);
 
-},{"../utils/FetchJson":11,"./utils/Points":10,"react":"react"}],8:[function(require,module,exports){
+},{"../utils/FetchJson":13,"./utils/Points":12,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1301,7 +1500,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"../utils/FetchJson":11,"./utils/Points":10,"react":"react"}],9:[function(require,module,exports){
+},{"../utils/FetchJson":13,"./utils/Points":12,"react":"react"}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1400,9 +1599,9 @@ var Points = function (_React$Component) {
 
 exports.default = Points;
 
-},{"react":"react"}],10:[function(require,module,exports){
-arguments[4][9][0].apply(exports,arguments)
-},{"dup":9,"react":"react"}],11:[function(require,module,exports){
+},{"react":"react"}],12:[function(require,module,exports){
+arguments[4][11][0].apply(exports,arguments)
+},{"dup":11,"react":"react"}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

@@ -1,0 +1,15 @@
+.map {
+    overflow: hidden;
+    background: $color-white;
+    background: radial-gradient(circle at center, $color-white 0%, $color-grey-dark 150%);
+}
+
+.map__grid {
+    fill: transparent;
+    stroke: $color-grey-light;
+    stroke-width: 1px;
+}
+
+.map__grid--visible {
+    fill: $color-white;
+}

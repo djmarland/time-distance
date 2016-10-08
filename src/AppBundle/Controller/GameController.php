@@ -54,7 +54,9 @@ class GameController extends Controller
         // get the bearing supplied
         $bearing = $this->request->getContent();
         try {
-            $bearing = new Bearing($bearing);
+            // reverse any rotation
+            $bearing = Bearing::getRotatedBearing($bearing, -$player->getMapRotationSteps());
+            $bearing = new Bearing($bearing, $player->getMapRotationSteps());
         } catch (InvalidBearingException $e) {
             throw new HttpException(400, 'Invalid direction provided');
         }
@@ -146,9 +148,15 @@ class GameController extends Controller
         ],
             true
         );
+
+        $directions = $this->getDirections($position);
+        if ($directions) {
+            $directions = Bearing::rotateIndexedArray($directions, $player->getMapRotationSteps());
+        }
+
         $this->toView('player', $player, true);
         $this->toView('position', $position, true);
-        $this->toView('directions', $this->getDirections($position), true);
+        $this->toView('directions', $directions, true);
 
         $playersPresent = [];
         if ($position->isInHub()) {
@@ -185,14 +193,7 @@ class GameController extends Controller
             ->findForHubDetailed($hub);
 
         // unpack the spokes into a list of directions
-        $directions = [
-            'nw' => null,
-            'ne' => null,
-            'e'  => null,
-            'se' => null,
-            'sw' => null,
-            'w'  => null,
-        ];
+        $directions = Bearing::getEmptyBearingsList();
 
         foreach ($spokes as $spoke) {
             /** @var Spoke $spoke */
@@ -204,7 +205,6 @@ class GameController extends Controller
                 'hub' => $spoke->getDestinationHub($hub)
             ];
         }
-
         return $directions;
     }
 }
