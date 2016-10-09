@@ -2,8 +2,18 @@
 
 namespace GameService\Service;
 
-use GameService\Domain\Entity\Hub;
-use GameService\Domain\Exception\EntityNotFoundException;
+use Exception;
+use GameService\Data\Database\Entity\ {
+    Hub as HubEntity,
+    Player as PlayerEntity
+};
+use GameService\Domain\Entity\ {
+    Hub,
+    Player
+};
+use GameService\Domain\Exception\ {
+    EntityNotFoundException
+};
 
 class HubsService extends Service
 {
@@ -58,5 +68,45 @@ class HubsService extends Service
             $hubs[] = $hub;
         }
         return $hubs;
+    }
+
+    public function takeOwnership(Hub $hub, Player $player)
+    {
+        // start a database transaction
+        $this->entityManager->beginTransaction();
+
+        // fetch the Hub entity
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('Hub')
+            ->where('Hub.id = :id')
+            ->setParameter('id', $hub->getId());
+        /** @var HubEntity $hubEntity */
+        $hubEntity = $qb->getQuery()->getOneOrNullResult();
+        $playerEntity = $this->getPlayerEntity($player);
+
+        try {
+            // todo - create a transaction object
+
+            // update the Hub with the ownership
+            $hubEntity->setOwner($playerEntity);
+            $hubEntity->setProtectionScore(0); // score becomes zero upon ownership // todo - is this correct?
+
+            $this->entityManager->persist($hubEntity);
+
+            // complete the transaction
+            $this->entityManager->flush();
+            $this->commit();
+        } catch (Exception $e) {
+            // rollback and rethrow
+            $this->rollback();
+            throw $e;
+        }
+    }
+
+    private function getPlayerEntity(Player $player): PlayerEntity
+    {
+        // todo - move these to EntityRepos
+        /** @var PlayerEntity $playerEntity */
+        return $this->getEntity('Player')->findByDbId($player->getId());
     }
 }

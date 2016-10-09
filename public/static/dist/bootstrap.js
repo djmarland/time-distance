@@ -288,7 +288,7 @@ var Board = function (_GamePanel) {
                 this.updateGlobalGameState(newGameState);
             }.bind(this), function (e) {
                 // todo - better error handling!
-                var message = 'Error making move';
+                var message = 'Error making move (did you try to cheat)';
                 if (e) {
                     message += ' - ' + e.message;
                 }
@@ -296,14 +296,19 @@ var Board = function (_GamePanel) {
             });
         }
     }, {
-        key: 'hubOption',
-        value: function hubOption(key, direction) {
-            return React.createElement(BoardHubOption, {
-                key: key,
-                directionKey: key,
-                direction: direction,
-                distanceMultiplier: this.state.gameState.gameSettings.distanceMultiplier,
-                onChangeHub: this.changeHub.bind(this) });
+        key: 'takeHub',
+        value: function takeHub() {
+            // todo loading state (fancy animation?)
+            _FetchJson2.default.postUrl('/play/take-hub.json', null, function (newGameState) {
+                this.updateGlobalGameState(newGameState);
+            }.bind(this), function (e) {
+                // todo - better error handling!
+                var message = 'Error (did you try to cheat)';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            });
         }
     }, {
         key: 'render',
@@ -312,10 +317,15 @@ var Board = function (_GamePanel) {
             if (!gameState.position.isInHub) {
                 return React.createElement(
                     'div',
-                    { className: 'grid' },
+                    { className: 'grid grid--flat' },
                     React.createElement(
                         'div',
-                        { className: 'g' },
+                        { className: 'g 2/3@xl' },
+                        React.createElement(_Map2.default, { gameState: this.state.gameState })
+                    ),
+                    React.createElement(
+                        'div',
+                        { className: 'g 1/3@xl game__panel--location' },
                         React.createElement(_Spoke2.default, {
                             onGameStateChange: this.updateGlobalGameState.bind(this),
                             position: gameState.position })
@@ -323,8 +333,7 @@ var Board = function (_GamePanel) {
                 );
             }
 
-            var location = React.createElement(BoardLocationHub, { position: gameState.position }),
-                hubOptions = [this.hubOption('nw', gameState.directions.nw), this.hubOption('ne', gameState.directions.ne), this.hubOption('w', gameState.directions.w), this.hubOption('e', gameState.directions.e), this.hubOption('sw', gameState.directions.sw), this.hubOption('se', gameState.directions.se)];
+            var location = React.createElement(BoardLocationHub, { onTakeHub: this.takeHub.bind(this), gameState: gameState });
 
             var playersPresent = null;
             if (gameState.playersPresent && gameState.playersPresent.length > 0) {
@@ -370,12 +379,12 @@ var Board = function (_GamePanel) {
                 { className: 'grid grid--flat' },
                 React.createElement(
                     'div',
-                    { className: 'g 1/2' },
-                    React.createElement(_Map2.default, null)
+                    { className: 'g 2/3@xl' },
+                    React.createElement(_Map2.default, { onChangeHub: this.changeHub.bind(this), gameState: this.state.gameState })
                 ),
                 React.createElement(
                     'div',
-                    { className: 'g 1/2 game__panel--location' },
+                    { className: 'g 1/3@xl game__panel--location' },
                     location,
                     React.createElement('hr', null),
                     playersPresent
@@ -389,95 +398,8 @@ var Board = function (_GamePanel) {
 
 exports.default = Board;
 
-var BoardHubOption = function (_React$Component) {
-    _inherits(BoardHubOption, _React$Component);
-
-    function BoardHubOption() {
-        _classCallCheck(this, BoardHubOption);
-
-        return _possibleConstructorReturn(this, (BoardHubOption.__proto__ || Object.getPrototypeOf(BoardHubOption)).apply(this, arguments));
-    }
-
-    _createClass(BoardHubOption, [{
-        key: 'goToHub',
-        value: function goToHub() {
-            this.props.onChangeHub(this.props.direction.bearing);
-        }
-    }, {
-        key: 'displayDistance',
-        value: function displayDistance(distance) {
-            if (distance === 0) {
-                var secs = Math.floor(this.props.distanceMultiplier / 60);
-                return Math.max(secs, 1) + ' seconds';
-            }
-            var totalSeconds = distance * this.props.distanceMultiplier,
-                hours = totalSeconds / 3600;
-
-            if (hours == 1) {
-                return hours + ' hour';
-            } else if (hours > 1) {
-                return hours + ' hours';
-            }
-            return totalSeconds / 60 + ' minutes';
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var directionEl = null,
-                direction = this.props.direction;
-
-            if (direction) {
-                var crossingVoid = null;
-                if (direction.crossesTheVoid) {
-                    crossingVoid = React.createElement(
-                        'p',
-                        null,
-                        'CROSSING THE VOID'
-                    );
-                }
-                directionEl = React.createElement(
-                    'div',
-                    null,
-                    React.createElement(
-                        'h4',
-                        null,
-                        direction.hub.name,
-                        ' - ',
-                        direction.hub.cluster.name
-                    ),
-                    React.createElement(
-                        'p',
-                        null,
-                        'Distance: ',
-                        this.displayDistance(direction.distance),
-                        React.createElement(
-                            'button',
-                            { onClick: this.goToHub.bind(this) },
-                            'Go there'
-                        )
-                    ),
-                    crossingVoid
-                );
-            }
-
-            return React.createElement(
-                'div',
-                { className: 'g 1/2' },
-                React.createElement(
-                    'h3',
-                    null,
-                    this.props.directionKey
-                ),
-                directionEl
-            );
-        }
-    }]);
-
-    return BoardHubOption;
-}(React.Component);
-
-var BoardLocationHub = function (_React$Component2) {
-    _inherits(BoardLocationHub, _React$Component2);
+var BoardLocationHub = function (_React$Component) {
+    _inherits(BoardLocationHub, _React$Component);
 
     function BoardLocationHub() {
         _classCallCheck(this, BoardLocationHub);
@@ -488,13 +410,61 @@ var BoardLocationHub = function (_React$Component2) {
     _createClass(BoardLocationHub, [{
         key: 'render',
         value: function render() {
-            var haven = null;
-            if (this.props.position.location.isHaven) {
+            var haven = null,
+                options = null,
+                gameState = this.props.gameState,
+                position = gameState.position,
+                protectionScore = null,
+                owner = null;
+            if (position.location.isHaven) {
                 haven = React.createElement(
                     'p',
                     null,
                     '(Safe Haven)'
                 );
+            } else {
+                if (position.location.protectionScore) {
+                    protectionScore = React.createElement(
+                        'h3',
+                        null,
+                        protectionScore
+                    );
+                }
+                if (position.location.owner) {
+                    owner = React.createElement(
+                        'h3',
+                        null,
+                        'Owner ',
+                        position.location.owner.nickname
+                    );
+                }
+                if (position.location.owner) {
+                    // todo - no attack buttons if it's your own hub
+                    options = React.createElement(
+                        'div',
+                        null,
+                        React.createElement(
+                            'button',
+                            null,
+                            'Attack'
+                        )
+                    );
+                } else {
+                    var disabled = gameState.player.points < gameState.gameSettings.originalPurchaseCost;
+                    options = React.createElement(
+                        'div',
+                        null,
+                        React.createElement(
+                            'button',
+                            {
+                                onClick: this.props.onTakeHub.bind(this),
+                                disabled: disabled },
+                            'Take this hub (',
+                            gameState.gameSettings.originalPurchaseCost,
+                            ')'
+                        )
+                    );
+                }
             }
 
             return React.createElement(
@@ -503,20 +473,76 @@ var BoardLocationHub = function (_React$Component2) {
                 React.createElement(
                     'h1',
                     null,
-                    this.props.position.location.name
+                    position.location.name
                 ),
                 React.createElement(
                     'h2',
                     null,
-                    this.props.position.location.cluster.name
+                    position.location.cluster.name
                 ),
-                haven
+                protectionScore,
+                owner,
+                haven,
+                options
             );
         }
     }]);
 
     return BoardLocationHub;
 }(React.Component);
+
+/*
+ class BoardHubOption extends React.Component {
+ goToHub() {
+ this.props.onChangeHub(this.props.direction.bearing);
+ }
+
+ displayDistance(distance) {
+ if (distance === 0) {
+ let secs = Math.floor(this.props.distanceMultiplier/60);
+ return Math.max(secs, 1) + ' seconds';
+ }
+ let totalSeconds = distance * this.props.distanceMultiplier,
+ hours = (totalSeconds / 3600);
+
+ if (hours == 1) {
+ return hours + ' hour';
+ } else if (hours > 1) {
+ return hours + ' hours';
+ }
+ return totalSeconds/60 + ' minutes';
+ }
+
+ render() {
+ let directionEl = null,
+ direction = this.props.direction;
+
+ if (direction) {
+ let crossingVoid = null;
+ if (direction.crossesTheVoid) {
+ crossingVoid = (<p>CROSSING THE VOID</p>);
+ }
+ directionEl = (
+ <div>
+ <h4>{direction.hub.name} - {direction.hub.cluster.name}</h4>
+ <p>
+ Distance: {this.displayDistance(direction.distance)}
+ <button onClick={this.goToHub.bind(this)}>Go there</button>
+ </p>
+ {crossingVoid}
+ </div>
+ );
+ }
+
+ return (
+ <div className="g 1/2">
+ <h3>{this.props.directionKey}</h3>
+ {directionEl}
+ </div>
+ );
+ }
+ }
+ */
 
 },{"../../utils/FetchJson":13,"../Utils/Points":11,"./Board/Map":4,"./Board/Spoke":5,"./GamePanel":6}],4:[function(require,module,exports){
 'use strict';
@@ -526,6 +552,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _GamePanel2 = require('../GamePanel');
+
+var _GamePanel3 = _interopRequireDefault(_GamePanel2);
 
 var _react = require('react');
 
@@ -539,22 +569,26 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Map = function (_React$Component) {
-    _inherits(Map, _React$Component);
+var Map = function (_GamePanel) {
+    _inherits(Map, _GamePanel);
 
     function Map() {
         _classCallCheck(this, Map);
 
         var _this = _possibleConstructorReturn(this, (Map.__proto__ || Object.getPrototypeOf(Map)).call(this));
 
-        _this.hexRadius = 30;
+        _this.hexRadius = 20; //32;
         _this.averageVerticalDiameter = 1.5 * _this.hexRadius;
         _this.innerRadius = Math.sqrt(3) / 2 * _this.hexRadius;
         _this.innerDiameter = _this.innerRadius * 2;
-        _this.state = {
-            containerHeight: null,
-            containerWidth: null
-        };
+        _this.xOffset = 0;
+        _this.yOffset = 0;
+        _this.middleX = 0;
+        _this.middleY = 0;
+        _this.totalCol = 0;
+        _this.totalRow = 0;
+        _this.state.containerHeight = null;
+        _this.state.containerWidth = null;
         return _this;
     }
 
@@ -582,20 +616,35 @@ var Map = function (_React$Component) {
             window.removeEventListener('resize', this.handleSize.bind(this));
         }
     }, {
+        key: 'handleMove',
+        value: function handleMove(bearing) {
+            this.props.onChangeHub(bearing);
+        }
+    }, {
         key: 'hexPoints',
         value: function hexPoints(xCoord, yCoord) {
-            var offset = Math.sqrt(3) * this.hexRadius / 2,
-                x = this.innerRadius + offset * xCoord * 2,
-                y = this.hexRadius + offset * yCoord * Math.sqrt(3),
+            var center = this.coordToHexCentre(xCoord, yCoord),
+                x = center.x,
+                y = center.y,
                 points = [],
                 theta = void 0;
-            if (yCoord % 2 !== 0) x += offset;
             for (theta = 0; theta < Math.PI * 2; theta += Math.PI / 3) {
                 var pointX = x + this.hexRadius * Math.sin(theta);
                 var pointY = y + this.hexRadius * Math.cos(theta);
                 points.push(pointX + ',' + pointY);
             }
             return points.join(' ');
+        }
+    }, {
+        key: 'coordToHexCentre',
+        value: function coordToHexCentre(col, row) {
+            var offset = Math.sqrt(3) * this.hexRadius / 2,
+                x = this.xOffset + offset * col * 2,
+                y = this.yOffset + offset * row * Math.sqrt(3);
+            if (row % 2 !== 0) {
+                x = x + offset;
+            }
+            return { x: x, y: y };
         }
     }, {
         key: 'makeHexagonPolygon',
@@ -608,54 +657,62 @@ var Map = function (_React$Component) {
                 className: className });
         }
     }, {
+        key: 'colToX',
+        value: function colToX(col) {
+            return col - this.middleX;
+        }
+    }, {
+        key: 'rowToY',
+        value: function rowToY(row) {
+            return row - this.middleY;
+        }
+    }, {
+        key: 'xToCol',
+        value: function xToCol(x) {
+            return x + this.middleX;
+        }
+    }, {
+        key: 'yToRow',
+        value: function yToRow(y) {
+            return y + this.middleY;
+        }
+    }, {
+        key: 'calculateLayout',
+        value: function calculateLayout() {
+            this.totalCol = Math.ceil(this.state.containerWidth / this.innerDiameter);
+            this.totalRow = Math.ceil(this.state.containerHeight / this.averageVerticalDiameter);
+            this.middleX = Math.floor(this.totalCol / 2) - 1;
+            this.middleY = Math.floor(this.totalRow / 2) - 1;
+
+            // middleY needs to always be an odd numbered row for the maths to work
+            if (!(this.middleY % 2)) {
+                this.middleY++;
+            }
+
+            // how close is the middle of the centre hex from the middle of the container
+            var centerX = this.innerRadius * (this.middleX * 2 + 1);
+            var centerY = this.averageVerticalDiameter * this.middleY;
+
+            this.xOffset = this.state.containerWidth / 2 - centerX;
+            this.yOffset = this.state.containerHeight / 2 - centerY;
+        }
+    }, {
         key: 'drawGrid',
         value: function drawGrid() {
-            var totalCol = Math.ceil(this.state.containerWidth / this.innerDiameter),
-                totalRow = Math.ceil(this.state.containerHeight / this.averageVerticalDiameter),
-                middleX = Math.floor(totalCol / 2) - 1,
-                middleY = Math.floor(totalRow / 2) - 1,
-                polygons = [],
-                col = void 0,
-                row = void 0;
+            var col = void 0,
+                row = void 0,
+                polygons = [];
 
-            // todo - calculate the visibility server-side
-            var revealed = [];
-            revealed[middleY - 2] = {};
-            revealed[middleY - 2][middleX - 1] = true;
-            revealed[middleY - 2][middleX] = true;
-            revealed[middleY - 2][middleX + 1] = true;
+            var revealed = this.state.gameState.map.visibleSpaces;
 
-            revealed[middleY - 1] = {};
-            revealed[middleY - 1][middleX - 2] = !(middleY % 2);
-            revealed[middleY - 1][middleX - 1] = true;
-            revealed[middleY - 1][middleX] = true;
-            revealed[middleY - 1][middleX + 1] = true;
-            revealed[middleY - 1][middleX + 2] = middleY % 2;
+            // going from -1 to 1 over to ensure we don't see the edges
+            for (col = -1; col <= this.totalCol; col++) {
+                for (row = -1; row <= this.totalRow; row++) {
+                    var className = 'map__grid ',
+                        x = this.colToX(col),
+                        y = this.rowToY(row);
 
-            revealed[middleY] = {};
-            revealed[middleY][middleX - 2] = true;
-            revealed[middleY][middleX - 1] = true;
-            revealed[middleY][middleX] = true;
-            revealed[middleY][middleX + 1] = true;
-            revealed[middleY][middleX + 2] = true;
-
-            revealed[middleY + 1] = {};
-            revealed[middleY + 1][middleX - 2] = !(middleY % 2);
-            revealed[middleY + 1][middleX - 1] = true;
-            revealed[middleY + 1][middleX] = true;
-            revealed[middleY + 1][middleX + 1] = true;
-            revealed[middleY + 1][middleX + 2] = middleY % 2;
-
-            revealed[middleY + 2] = {};
-            revealed[middleY + 2][middleX - 1] = true;
-            revealed[middleY + 2][middleX] = true;
-            revealed[middleY + 2][middleX + 1] = true;
-
-            for (col = -1; col < totalCol; col++) {
-                for (row = -1; row < totalRow; row++) {
-                    var className = 'map__grid ';
-
-                    if (revealed[row] && revealed[row][col]) {
+                    if (revealed[y] && revealed[y][x]) {
                         className += 'map__grid--visible';
                     }
 
@@ -665,9 +722,65 @@ var Map = function (_React$Component) {
             return polygons;
         }
     }, {
+        key: 'drawCurrentHub',
+        value: function drawCurrentHub() {
+            // current position is always at the origin
+            var position = this.state.gameState.map.currentMapPosition.position,
+                className = 'map__hub map__hub--current ';
+            if (position.isInHub && position.location.isHaven) {
+                className += 'map__hub--haven';
+            }
+            return this.makeHexagonPolygon(this.xToCol(0), this.yToRow(0), className);
+        }
+    }, {
+        key: 'drawHubs',
+        value: function drawHubs() {
+            var hubs = [];
+            this.state.gameState.map.linkedHubs.forEach(function (hub) {
+                var onClick = function () {
+                    this.handleMove(hub.bearing);
+                }.bind(this),
+                    className = 'map__hub map__hub--available ';
+                if (hub.hub.isHaven) {
+                    className += 'map__hub--haven';
+                }
+                hubs.push(_react2.default.createElement(MapPolygon, { points: this.hexPoints(this.xToCol(hub.x), this.yToRow(hub.y)),
+                    hub: hub,
+                    onClick: onClick,
+                    key: hub.x + '-' + hub.y,
+                    className: className }));
+            }.bind(this));
+            return hubs;
+        }
+    }, {
+        key: 'drawSpokes',
+        value: function drawSpokes() {
+            var spokes = [];
+            this.state.gameState.map.linkedHubs.forEach(function (hub) {
+                var start = this.coordToHexCentre(this.xToCol(0), this.yToRow(0)),
+                    end = this.coordToHexCentre(this.xToCol(hub.x), this.yToRow(hub.y)),
+                    className = 'map__spoke ';
+                if (hub.crossesTheVoid) {
+                    className += 'map__spoke--void';
+                }
+                spokes.push(_react2.default.createElement(MapSpoke, { key: Math.random(),
+                    x1: start.x,
+                    y1: start.y,
+                    x2: end.x,
+                    y2: end.y,
+                    className: className }));
+            }.bind(this));
+            return spokes;
+        }
+    }, {
         key: 'render',
         value: function render() {
-            var items = this.drawGrid();
+            this.calculateLayout();
+
+            var grid = this.drawGrid(),
+                current = this.drawCurrentHub(),
+                hubs = this.drawHubs(),
+                spokes = this.drawSpokes();
             return _react2.default.createElement(
                 'div',
                 { className: 'map', ref: 'mapContainer' },
@@ -676,18 +789,69 @@ var Map = function (_React$Component) {
                     { xmlns: 'http://www.w3.org/2000/svg',
                         width: this.state.containerWidth,
                         height: this.state.containerHeight },
-                    items
+                    grid,
+                    spokes,
+                    hubs,
+                    current
                 )
             );
         }
     }]);
 
     return Map;
-}(_react2.default.Component);
+}(_GamePanel3.default);
 
 exports.default = Map;
 
-},{"react":"react"}],5:[function(require,module,exports){
+var MapPolygon = function (_React$Component) {
+    _inherits(MapPolygon, _React$Component);
+
+    function MapPolygon() {
+        _classCallCheck(this, MapPolygon);
+
+        return _possibleConstructorReturn(this, (MapPolygon.__proto__ || Object.getPrototypeOf(MapPolygon)).apply(this, arguments));
+    }
+
+    _createClass(MapPolygon, [{
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement('polygon', {
+                xmlns: 'http://www.w3.org/2000/svg',
+                points: this.props.points,
+                onClick: this.props.onClick,
+                className: this.props.className });
+        }
+    }]);
+
+    return MapPolygon;
+}(_react2.default.Component);
+
+var MapSpoke = function (_React$Component2) {
+    _inherits(MapSpoke, _React$Component2);
+
+    function MapSpoke() {
+        _classCallCheck(this, MapSpoke);
+
+        return _possibleConstructorReturn(this, (MapSpoke.__proto__ || Object.getPrototypeOf(MapSpoke)).apply(this, arguments));
+    }
+
+    _createClass(MapSpoke, [{
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement('line', {
+                xmlns: 'http://www.w3.org/2000/svg',
+                x1: this.props.x1,
+                x2: this.props.x2,
+                y1: this.props.y1,
+                y2: this.props.y2,
+                className: this.props.className });
+        }
+    }]);
+
+    return MapSpoke;
+}(_react2.default.Component);
+
+},{"../GamePanel":6,"react":"react"}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

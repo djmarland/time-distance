@@ -80,6 +80,7 @@ class Player extends Entity implements \JsonSerializable
 
     public function getMapRotationSteps(): int
     {
+        return 0; // no rotation at this stage
         return $this->getId() % 6;
     }
 

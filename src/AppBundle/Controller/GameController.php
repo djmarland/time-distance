@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use GameService\Domain\Entity\Map;
 use GameService\Domain\Entity\Player;
 use GameService\Domain\Entity\Position;
 use GameService\Domain\Entity\Spoke;
@@ -115,6 +116,41 @@ class GameController extends Controller
         return $this->renderStatus();
     }
 
+    public function takeHubAction()
+    {
+        $player = $this->getPlayer();
+
+        // get the current players position
+        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
+
+        // only valid if in a hub
+        if (!$position->isInHub()) {
+            throw new HttpException(400, 'Invalid move (you are not in a hub). No cheating!');
+        }
+
+        $hub = $position->getLocation();
+        // only valid if not a haven
+        if ($hub->isHaven()) {
+            throw new HttpException(400, 'Invalid move (this is a haven). No cheating!');
+        }
+
+        // only possible if the hub isn't already owned
+        $owner = $hub->getOwner();
+        if ($owner) {
+            throw new HttpException(400, 'Invalid move (hub already owned). No cheating!');
+        }
+
+        // only possible if the player has the original purchase cost available
+        if ($player->getPoints() < $this->getParameter('original_purchase_cost')) {
+            throw new HttpException(400, 'Invalid move (not enough points to do this). No cheating!');
+        }
+
+        // now we are ready to take ownership
+        $this->get('app.services.hubs')->takeOwnership($position->getLocation(), $player);
+
+        return $this->renderStatus();
+    }
+
     public function statusAction()
     {
         return $this->renderStatus();
@@ -140,12 +176,15 @@ class GameController extends Controller
     {
         $player = $this->getPlayer();
         $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
+        $visibilityWindow = $this->getParameter('visibility_window');
 
         $this->toView(
             'gameSettings', [
-            'currentTime' => $this->get('app.time_provider')->format('c'),
-            'distanceMultiplier' => $this->getParameter('distance_multiplier')
-        ],
+                'currentTime' => $this->get('app.time_provider')->format('c'),
+                'distanceMultiplier' => $this->getParameter('distance_multiplier'),
+                'visibilityWindow' => $visibilityWindow,
+                'originalPurchaseCost' => $this->getParameter('original_purchase_cost'),
+            ],
             true
         );
 
@@ -154,9 +193,12 @@ class GameController extends Controller
             $directions = Bearing::rotateIndexedArray($directions, $player->getMapRotationSteps());
         }
 
+        $map = new Map($position, $directions, [], $visibilityWindow);
+
         $this->toView('player', $player, true);
+        $this->toView('map', $map, true);
         $this->toView('position', $position, true);
-        $this->toView('directions', $directions, true);
+        $this->toView('directions', $directions, true); // todo - remove (replaced with map)
 
         $playersPresent = [];
         if ($position->isInHub()) {
@@ -182,10 +224,10 @@ class GameController extends Controller
         }
     }
 
-    private function getDirections(Position $position)
+    private function getDirections(Position $position): array
     {
         if (!$position->isInHub()) {
-            return null;
+            return [];
         }
         $hub = $position->getLocation();
 

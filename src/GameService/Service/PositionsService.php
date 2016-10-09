@@ -15,11 +15,12 @@ class PositionsService extends Service
     ): Position {
         $qb = $this->getQueryBuilder(self::ENTITY);
         $qb->select(
-            'Position', 'Hub', 'Spoke', 'Cluster', 'SpokeStartHub',
+            'Position', 'Hub', 'Owner', 'Spoke', 'Cluster', 'SpokeStartHub',
             'SpokeEndHub', 'SpokeStartCluster', 'SpokeEndCluster'
             )
             ->leftJoin('Position.hub', 'Hub')
             ->leftJoin('Hub.cluster', 'Cluster')
+            ->leftJoin('Hub.owner', 'Owner')
             ->leftJoin('Position.spoke', 'Spoke')
             ->leftJoin('Spoke.startHub', 'SpokeStartHub')
             ->leftJoin('SpokeStartHub.cluster', 'SpokeStartCluster')

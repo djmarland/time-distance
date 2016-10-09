@@ -15,7 +15,7 @@ export default class Board extends GamePanel {
             }.bind(this),
             function(e) {
                 // todo - better error handling!
-                let message = 'Error making move';
+                let message = 'Error making move (did you try to cheat)';
                 if (e) {
                     message += ' - ' + e.message;
                 }
@@ -24,38 +24,43 @@ export default class Board extends GamePanel {
         );
     }
 
-    hubOption(key, direction) {
-        return (<BoardHubOption
-            key={key}
-            directionKey={key}
-            direction={direction}
-            distanceMultiplier={this.state.gameState.gameSettings.distanceMultiplier}
-            onChangeHub={this.changeHub.bind(this)} />);
+    takeHub() {
+        // todo loading state (fancy animation?)
+        FetchJson.postUrl(
+            '/play/take-hub.json',
+            null,
+            function(newGameState) {
+                this.updateGlobalGameState(newGameState);
+            }.bind(this),
+            function(e) {
+                // todo - better error handling!
+                let message = 'Error (did you try to cheat)';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            }
+        );
     }
 
     render() {
         let gameState = this.state.gameState;
         if (!gameState.position.isInHub) {
             return (
-                <div className="grid">
-                    <div className="g">
-                        <BoardSpoke
-                            onGameStateChange={this.updateGlobalGameState.bind(this)}
-                            position={gameState.position} />
-                    </div>
+            <div className="grid grid--flat">
+                <div className="g 2/3@xl">
+                    <BoardMap gameState={this.state.gameState}/>
                 </div>
+                <div className="g 1/3@xl game__panel--location">
+                    <BoardSpoke
+                        onGameStateChange={this.updateGlobalGameState.bind(this)}
+                        position={gameState.position} />
+                </div>
+            </div>
             );
         }
 
-        let location = (<BoardLocationHub position={gameState.position} />),
-            hubOptions = [
-            this.hubOption('nw', gameState.directions.nw),
-            this.hubOption('ne', gameState.directions.ne),
-            this.hubOption('w', gameState.directions.w),
-            this.hubOption('e', gameState.directions.e),
-            this.hubOption('sw', gameState.directions.sw),
-            this.hubOption('se', gameState.directions.se),
-        ];
+        let location = (<BoardLocationHub onTakeHub={this.takeHub.bind(this)} gameState={gameState} />);
 
         let playersPresent = null;
         if (gameState.playersPresent && gameState.playersPresent.length > 0) {
@@ -84,10 +89,10 @@ export default class Board extends GamePanel {
 
         return (
             <div className="grid grid--flat">
-                <div className="g 1/2">
-                    <BoardMap/>
+                <div className="g 2/3@xl">
+                    <BoardMap onChangeHub={this.changeHub.bind(this)} gameState={this.state.gameState}/>
                 </div>
-                <div className="g 1/2 game__panel--location">
+                <div className="g 1/3@xl game__panel--location">
                     {location}
                     <hr />
                     {playersPresent}
@@ -97,71 +102,108 @@ export default class Board extends GamePanel {
     };
 }
 
-class BoardHubOption extends React.Component {
-    goToHub() {
-        this.props.onChangeHub(this.props.direction.bearing);
-    }
-
-    displayDistance(distance) {
-        if (distance === 0) {
-            let secs = Math.floor(this.props.distanceMultiplier/60);
-            return Math.max(secs, 1) + ' seconds';
-        }
-        let totalSeconds = distance * this.props.distanceMultiplier,
-            hours = (totalSeconds / 3600);
-
-        if (hours == 1) {
-            return hours + ' hour';
-        } else if (hours > 1) {
-            return hours + ' hours';
-        }
-        return totalSeconds/60 + ' minutes';
-    }
-
-    render() {
-        let directionEl = null,
-            direction = this.props.direction;
-
-        if (direction) {
-            let crossingVoid = null;
-            if (direction.crossesTheVoid) {
-                crossingVoid = (<p>CROSSING THE VOID</p>);
-            }
-            directionEl = (
-                <div>
-                    <h4>{direction.hub.name} - {direction.hub.cluster.name}</h4>
-                    <p>
-                        Distance: {this.displayDistance(direction.distance)}
-                        <button onClick={this.goToHub.bind(this)}>Go there</button>
-                    </p>
-                    {crossingVoid}
-                </div>
-            );
-        }
-
-        return (
-            <div className="g 1/2">
-                <h3>{this.props.directionKey}</h3>
-                {directionEl}
-            </div>
-        );
-    }
-}
-
-
 class BoardLocationHub extends React.Component {
     render() {
-        let haven = null;
-        if (this.props.position.location.isHaven) {
+        let haven = null,
+            options = null,
+            gameState = this.props.gameState,
+            position = gameState.position,
+            protectionScore = null,
+            owner = null;
+        if (position.location.isHaven) {
             haven = (<p>(Safe Haven)</p>);
+        } else {
+            if (position.location.protectionScore) {
+                protectionScore = (<h3>{protectionScore}</h3>);
+            }
+            if (position.location.owner) {
+                owner = (<h3>Owner {position.location.owner.nickname}</h3>);
+            }
+            if (position.location.owner) {
+                // todo - no attack buttons if it's your own hub
+                options = (
+                    <div>
+                        <button>Attack</button>
+                    </div>
+                );
+            } else {
+                let disabled = (gameState.player.points < gameState.gameSettings.originalPurchaseCost);
+                options = (
+                    <div>
+                        <button
+                            onClick={this.props.onTakeHub.bind(this)}
+                            disabled={disabled}>
+                            Take this hub ({gameState.gameSettings.originalPurchaseCost})
+                        </button>
+                    </div>
+                )
+            }
         }
 
         return (
             <div>
-                <h1>{this.props.position.location.name}</h1>
-                <h2>{this.props.position.location.cluster.name}</h2>
+                <h1>{position.location.name}</h1>
+                <h2>{position.location.cluster.name}</h2>
+                {protectionScore}
+                {owner}
                 {haven}
+                {options}
             </div>
         );
     }
 }
+
+
+
+/*
+ class BoardHubOption extends React.Component {
+ goToHub() {
+ this.props.onChangeHub(this.props.direction.bearing);
+ }
+
+ displayDistance(distance) {
+ if (distance === 0) {
+ let secs = Math.floor(this.props.distanceMultiplier/60);
+ return Math.max(secs, 1) + ' seconds';
+ }
+ let totalSeconds = distance * this.props.distanceMultiplier,
+ hours = (totalSeconds / 3600);
+
+ if (hours == 1) {
+ return hours + ' hour';
+ } else if (hours > 1) {
+ return hours + ' hours';
+ }
+ return totalSeconds/60 + ' minutes';
+ }
+
+ render() {
+ let directionEl = null,
+ direction = this.props.direction;
+
+ if (direction) {
+ let crossingVoid = null;
+ if (direction.crossesTheVoid) {
+ crossingVoid = (<p>CROSSING THE VOID</p>);
+ }
+ directionEl = (
+ <div>
+ <h4>{direction.hub.name} - {direction.hub.cluster.name}</h4>
+ <p>
+ Distance: {this.displayDistance(direction.distance)}
+ <button onClick={this.goToHub.bind(this)}>Go there</button>
+ </p>
+ {crossingVoid}
+ </div>
+ );
+ }
+
+ return (
+ <div className="g 1/2">
+ <h3>{this.props.directionKey}</h3>
+ {directionEl}
+ </div>
+ );
+ }
+ }
+ */

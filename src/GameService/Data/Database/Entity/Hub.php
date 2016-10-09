@@ -25,11 +25,20 @@ class Hub extends Entity
     /** @ORM\Column(type="boolean") */
     private $isHaven = false;
 
+    /** @ORM\Column(type="integer", nullable=true) */
+    private $protectionScore;
+
     /**
      * @ORM\ManyToOne(targetEntity="Cluster")
      * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $cluster;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Player")
+     * @ORM\JoinColumn(onDelete="SET NULL", nullable=true)
+     */
+    private $owner;
 
     public function __construct(
         string $name,
@@ -78,5 +87,25 @@ class Hub extends Entity
     public function getIsHaven(): bool
     {
         return $this->isHaven;
+    }
+
+    public function getOwner()
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(Player $owner = null)
+    {
+        $this->owner = $owner;
+    }
+
+    public function getProtectionScore()
+    {
+        return $this->protectionScore;
+    }
+
+    public function setProtectionScore(int $score = null)
+    {
+        $this->protectionScore = $score;
     }
 }

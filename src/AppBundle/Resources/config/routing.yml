@@ -30,7 +30,7 @@ play:
   path:     /play
   defaults: { _controller: AppBundle:Game:play }
 
-# temporary
+# arrival hopefully shouldn't be needed
 arrival:
   path:     /play/arrival.json
   defaults: { _controller: AppBundle:Game:arrival }
@@ -46,3 +46,7 @@ action_new_player:
 action_make_move:
   path:     /play/move.json
   defaults: { _controller: AppBundle:Game:makeMove }
+
+action_take_hub:
+  path:     /play/take-hub.json
+  defaults: { _controller: AppBundle:Game:takeHub }

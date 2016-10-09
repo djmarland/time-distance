@@ -5,6 +5,8 @@ imports:
 # http://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     distance_multiplier: 3600 # seconds per distance unit (note: 0 = fixed 60 seconds)
+    visibility_window: 3
+    original_purchase_cost: 500
     locale: en
 
 framework:

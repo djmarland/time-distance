@@ -6,10 +6,46 @@
 
 .map__grid {
     fill: transparent;
-    stroke: $color-grey-light;
+    stroke: $color-grey-lightest;
     stroke-width: 1px;
 }
 
 .map__grid--visible {
     fill: $color-white;
+}
+
+.map__hub {
+    stroke-width: $size-grid-unit-tiny;
+    fill: #fff;
+}
+
+.map__hub--current {
+    stroke: $color-black;
+}
+
+.map__hub--available {
+    cursor: pointer;
+    stroke: green;
+}
+
+.map__hub--haven {
+    stroke-dasharray: 1;
+}
+
+@keyframes SPOKEVOID {
+    from {
+        stroke-dashoffset: 400;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.map__spoke {
+    stroke: $color-black;
+    stroke-width: $size-grid-unit-tiny;
+}
+.map__spoke--void {
+    stroke-dasharray: 40;
+    animation: SPOKEVOID 10s linear infinite;
 }

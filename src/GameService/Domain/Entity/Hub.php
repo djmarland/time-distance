@@ -12,6 +12,8 @@ class Hub extends Entity implements \JsonSerializable
     private $xCoordinate;
     private $yCoordinate;
     private $isHaven;
+    private $protectionScore;
+    private $owner;
 
     public function __construct(
         int $id,
@@ -20,7 +22,9 @@ class Hub extends Entity implements \JsonSerializable
         int $xCoordinate,
         int $yCoordinate,
         bool $isHaven,
-        Cluster $cluster = null
+        int $protectionScore = null,
+        Cluster $cluster = null,
+        Player $owner = null
     ) {
         parent::__construct($id);
 
@@ -30,6 +34,8 @@ class Hub extends Entity implements \JsonSerializable
         $this->xCoordinate = $xCoordinate;
         $this->yCoordinate = $yCoordinate;
         $this->isHaven = $isHaven;
+        $this->protectionScore = $protectionScore;
+        $this->owner = $owner;
     }
 
     public function getName(): string
@@ -50,6 +56,19 @@ class Hub extends Entity implements \JsonSerializable
     public function getYCoordinate(): int
     {
         return $this->yCoordinate;
+    }
+
+    public function getProtectionScore()
+    {
+        return $this->protectionScore;
+    }
+
+    /**
+     * @return Player|null
+     */
+    public function getOwner()
+    {
+        return $this->owner;
     }
 
     public function getCluster(): Cluster
@@ -82,7 +101,9 @@ class Hub extends Entity implements \JsonSerializable
             'url' => $this->getUrl(),
             'name' => $this->getName(),
             'isHaven' => $this->isHaven(),
+            'protectionScore' => $this->getProtectionScore(),
             'cluster' => $this->getCluster(),
+            'owner' => $this->getOwner(),
         ];
     }
 }

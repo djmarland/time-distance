@@ -14,6 +14,12 @@ class HubMapper extends Mapper
                 ->getDomainModel($item['cluster']);
         }
 
+        $owner = null;
+        if (isset($item['owner'])) {
+            $owner = $this->mapperFactory->createPlayerMapper()
+                ->getDomainModel($item['owner']);
+        }
+
         return new Hub(
             $item['id'],
             $item['name'],
@@ -21,7 +27,9 @@ class HubMapper extends Mapper
             $item['xCoordinate'],
             $item['yCoordinate'],
             $item['isHaven'],
-            $cluster
+            $item['protectionScore'],
+            $cluster,
+            $owner
         );
     }
 }
