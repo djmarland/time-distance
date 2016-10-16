@@ -45,13 +45,6 @@ export default class Points extends React.Component {
     render() {
         return (
             <span className="points">
-                <span className="points__icon">
-                    <svg
-                        viewBox="0 0 104 120"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <use xlinkHref="#icon-hexagon" />
-                    </svg>
-                </span>
                 {this.state.pointValue}
             </span>
         );

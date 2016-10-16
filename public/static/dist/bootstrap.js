@@ -25,6 +25,10 @@ var _Player = require('./game/Player');
 
 var _Player2 = _interopRequireDefault(_Player);
 
+var _Players = require('./game/Players');
+
+var _Players2 = _interopRequireDefault(_Players);
+
 var _Header = require('./game/Header');
 
 var _Header2 = _interopRequireDefault(_Header);
@@ -38,6 +42,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
         appGame = document.getElementById('app-game'),
         appHub = document.getElementById('app-hub'),
         appPlayer = document.getElementById('app-player'),
+        appPlayersList = document.getElementById('app-players-list'),
         updateInterval = 20 * 1000;
 
     function unsupported() {
@@ -48,7 +53,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
     function init() {
 
-        // todo - get the header to update dynamically?
+        // todo - get the header to update dynamically (when hearing an event)?
 
         if (appHeader) {
             // todo - use initial state if present?
@@ -78,17 +83,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
         }
 
         if (appHub) {
-            // todo - initial should be whole dataset (and then not need a hubkey)
-            var playersData = appHub.dataset.initial;
+            var hubData = appHub.dataset.initial;
 
-            if (playersData) {
-                playersData = JSON.parse(playersData);
+            if (hubData) {
+                hubData = JSON.parse(hubData);
             } else {
-                playersData = [];
+                hubData = [];
             }
             _reactDom2.default.render(_react2.default.createElement(_Hub2.default, {
-                playersData: playersData,
-                hubKey: appHub.dataset.hubkey,
+                hubData: hubData,
                 updateInterval: updateInterval
             }), appHub);
         }
@@ -100,6 +103,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
                 updateInterval: updateInterval
             }), appPlayer);
         }
+
+        if (appPlayersList) {
+            var initialData = JSON.parse(appPlayersList.dataset.initial);
+            _reactDom2.default.render(_react2.default.createElement(_Players2.default, {
+                initialData: initialData,
+                updateInterval: updateInterval
+            }), appPlayersList);
+        }
+
+        // todo - reuse code in this bootstrap file
     }
 
     if (document.getElementsByClassName && document.addEventListener) {
@@ -109,7 +122,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     }
 })();
 
-},{"./game/Game":2,"./game/Header":8,"./game/Hub":9,"./game/Player":10,"./utils/FetchJson":13,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
+},{"./game/Game":2,"./game/Header":9,"./game/Hub":10,"./game/Player":11,"./game/Players":12,"./utils/FetchJson":17,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -129,6 +142,10 @@ var _Board2 = _interopRequireDefault(_Board);
 var _Player = require('./GamePanel/Player');
 
 var _Player2 = _interopRequireDefault(_Player);
+
+var _Abilities = require('./GamePanel/Abilities');
+
+var _Abilities2 = _interopRequireDefault(_Abilities);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -217,7 +234,7 @@ var Game = function (_React$Component) {
                 panels.push(_react2.default.createElement(
                     'div',
                     { key: 'panel-abilities', className: "game__panel game__panel--abilities g 1/2@xl " + abilitiesClass },
-                    'ABILITIES'
+                    _react2.default.createElement(_Abilities2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) })
                 ));
             }
 
@@ -234,7 +251,251 @@ var Game = function (_React$Component) {
 
 exports.default = Game;
 
-},{"./GamePanel/Board":3,"./GamePanel/Player":7,"react":"react"}],3:[function(require,module,exports){
+},{"./GamePanel/Abilities":3,"./GamePanel/Board":4,"./GamePanel/Player":8,"react":"react"}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _GamePanel2 = require('./GamePanel');
+
+var _GamePanel3 = _interopRequireDefault(_GamePanel2);
+
+var _Lightbox = require('../../utils/Lightbox');
+
+var _Lightbox2 = _interopRequireDefault(_Lightbox);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Abilities = function (_GamePanel) {
+    _inherits(Abilities, _GamePanel);
+
+    function Abilities() {
+        _classCallCheck(this, Abilities);
+
+        return _possibleConstructorReturn(this, (Abilities.__proto__ || Object.getPrototypeOf(Abilities)).apply(this, arguments));
+    }
+
+    _createClass(Abilities, [{
+        key: 'render',
+        value: function render() {
+            var abilities = this.state.gameState.abilities,
+                groups = [];
+
+            abilities.forEach(function (group, i) {
+                groups.push(_react2.default.createElement(
+                    'li',
+                    { key: i, className: 'abilities-list__group' },
+                    _react2.default.createElement(AbilitiesGroup, { group: group })
+                ));
+            });
+
+            return _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    'Abilities'
+                ),
+                _react2.default.createElement(
+                    'ul',
+                    { className: 'abilities-list' },
+                    groups
+                )
+            );
+        }
+    }]);
+
+    return Abilities;
+}(_GamePanel3.default);
+
+exports.default = Abilities;
+
+var AbilitiesGroup = function (_React$Component) {
+    _inherits(AbilitiesGroup, _React$Component);
+
+    function AbilitiesGroup() {
+        _classCallCheck(this, AbilitiesGroup);
+
+        return _possibleConstructorReturn(this, (AbilitiesGroup.__proto__ || Object.getPrototypeOf(AbilitiesGroup)).apply(this, arguments));
+    }
+
+    _createClass(AbilitiesGroup, [{
+        key: 'render',
+        value: function render() {
+            var items = [];
+
+            this.props.group.items.forEach(function (item, i) {
+                items.push(_react2.default.createElement(
+                    'li',
+                    { key: i, className: 'abilities-list__item g' },
+                    _react2.default.createElement(AbilitiesItem, { item: item })
+                ));
+            });
+
+            return _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'h3',
+                    { className: 'abilities-list__group-heading e' },
+                    this.props.group.title
+                ),
+                _react2.default.createElement(
+                    'ul',
+                    { className: 'abilities-list__group-items grid' },
+                    items
+                )
+            );
+        }
+    }]);
+
+    return AbilitiesGroup;
+}(_react2.default.Component);
+
+var AbilitiesItem = function (_React$Component2) {
+    _inherits(AbilitiesItem, _React$Component2);
+
+    function AbilitiesItem() {
+        _classCallCheck(this, AbilitiesItem);
+
+        var _this3 = _possibleConstructorReturn(this, (AbilitiesItem.__proto__ || Object.getPrototypeOf(AbilitiesItem)).call(this));
+
+        _this3.state = {
+            modalOpen: false
+        };
+        return _this3;
+    }
+
+    _createClass(AbilitiesItem, [{
+        key: 'onClick',
+        value: function onClick() {
+            this.setState({
+                modalOpen: true
+            });
+        }
+    }, {
+        key: 'useAbility',
+        value: function useAbility() {
+            alert('Forcefield!');
+        }
+    }, {
+        key: 'modalCloseCallback',
+        value: function modalCloseCallback() {
+            this.setState({
+                modalOpen: false
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var item = this.props.item;
+
+            if (item.mystery) {
+                return _react2.default.createElement(
+                    'div',
+                    null,
+                    _react2.default.createElement(
+                        'button',
+                        { className: 'ability ability--mystery', onClick: this.onClick.bind(this) },
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'ability__name' },
+                            '?'
+                        ),
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'ability__count' },
+                            '-'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        _Lightbox2.default,
+                        { modalIsOpen: this.state.modalOpen,
+                            closeCallback: this.modalCloseCallback.bind(this),
+                            title: '?' },
+                        _react2.default.createElement(
+                            'p',
+                            null,
+                            'You are yet to unlock this ability (by finding it in the wild)'
+                        )
+                    )
+                );
+            }
+
+            var abilityClass = 'ability ',
+                useButton = null;
+
+            if (item.count) {
+                useButton = _react2.default.createElement(
+                    'p',
+                    { className: 'text--center' },
+                    _react2.default.createElement(
+                        'button',
+                        { onClick: this.useAbility.bind(this) },
+                        'Use now'
+                    )
+                );
+            } else {
+                abilityClass += 'ability--empty';
+            }
+            return _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'button',
+                    { className: abilityClass, onClick: this.onClick.bind(this) },
+                    _react2.default.createElement(
+                        'span',
+                        { className: 'ability__name' },
+                        item.ability.name
+                    ),
+                    _react2.default.createElement(
+                        'span',
+                        { className: 'ability__count' },
+                        item.count
+                    )
+                ),
+                _react2.default.createElement(
+                    _Lightbox2.default,
+                    { modalIsOpen: this.state.modalOpen,
+                        closeCallback: this.modalCloseCallback.bind(this),
+                        title: item.ability.name },
+                    _react2.default.createElement(
+                        'p',
+                        null,
+                        item.ability.description
+                    ),
+                    _react2.default.createElement(
+                        'p',
+                        { className: 'text--center' },
+                        'Number available: ',
+                        item.count
+                    ),
+                    useButton
+                )
+            );
+        }
+    }]);
+
+    return AbilitiesItem;
+}(_react2.default.Component);
+
+},{"../../utils/Lightbox":18,"./GamePanel":7,"react":"react"}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -374,6 +635,17 @@ var Board = function (_GamePanel) {
                 })();
             }
 
+            var abilities = [];
+            if (gameState.abilitiesPresent && gameState.abilitiesPresent.length > 0) {
+                gameState.abilitiesPresent.forEach(function (ability, i) {
+                    abilities.push(React.createElement(
+                        'p',
+                        { key: i },
+                        ability.name
+                    ));
+                });
+            }
+
             return React.createElement(
                 'div',
                 { className: 'grid grid--flat' },
@@ -386,8 +658,17 @@ var Board = function (_GamePanel) {
                     'div',
                     { className: 'g 1/3@xl game__panel--location' },
                     location,
-                    React.createElement('hr', null),
-                    playersPresent
+                    playersPresent,
+                    React.createElement(
+                        'div',
+                        null,
+                        React.createElement(
+                            'h2',
+                            null,
+                            'Abilities here'
+                        ),
+                        abilities
+                    )
                 )
             );
         }
@@ -544,7 +825,7 @@ var BoardLocationHub = function (_React$Component) {
  }
  */
 
-},{"../../utils/FetchJson":13,"../Utils/Points":11,"./Board/Map":4,"./Board/Spoke":5,"./GamePanel":6}],4:[function(require,module,exports){
+},{"../../utils/FetchJson":17,"../Utils/Points":14,"./Board/Map":5,"./Board/Spoke":6,"./GamePanel":7}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -577,7 +858,7 @@ var Map = function (_GamePanel) {
 
         var _this = _possibleConstructorReturn(this, (Map.__proto__ || Object.getPrototypeOf(Map)).call(this));
 
-        _this.hexRadius = 20; //32;
+        _this.hexRadius = 32;
         _this.averageVerticalDiameter = 1.5 * _this.hexRadius;
         _this.innerRadius = Math.sqrt(3) / 2 * _this.hexRadius;
         _this.innerDiameter = _this.innerRadius * 2;
@@ -776,7 +1057,6 @@ var Map = function (_GamePanel) {
         key: 'render',
         value: function render() {
             this.calculateLayout();
-
             var grid = this.drawGrid(),
                 current = this.drawCurrentHub(),
                 hubs = this.drawHubs(),
@@ -786,7 +1066,7 @@ var Map = function (_GamePanel) {
                 { className: 'map', ref: 'mapContainer' },
                 _react2.default.createElement(
                     'svg',
-                    { xmlns: 'http://www.w3.org/2000/svg',
+                    { className: 'map__board', xmlns: 'http://www.w3.org/2000/svg',
                         width: this.state.containerWidth,
                         height: this.state.containerHeight },
                     grid,
@@ -851,7 +1131,7 @@ var MapSpoke = function (_React$Component2) {
     return MapSpoke;
 }(_react2.default.Component);
 
-},{"../GamePanel":6,"react":"react"}],5:[function(require,module,exports){
+},{"../GamePanel":7,"react":"react"}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1126,7 +1406,7 @@ var Spoke = function (_React$Component) {
 
 exports.default = Spoke;
 
-},{"../../../utils/FetchJson":13,"../../Utils/Points":11,"react":"react"}],6:[function(require,module,exports){
+},{"../../../utils/FetchJson":17,"../../Utils/Points":14,"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1191,7 +1471,7 @@ var GamePanel = function (_React$Component) {
 
 exports.default = GamePanel;
 
-},{"react":"react"}],7:[function(require,module,exports){
+},{"react":"react"}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1226,14 +1506,6 @@ var Player = function (_GamePanel) {
     }
 
     _createClass(Player, [{
-        key: 'onClickButton',
-        value: function onClickButton() {
-            var gameState = this.state.gameState;
-            // move to the hub
-            gameState.currentPosition.type = 'spoke';
-            this.updateGlobalGameState(gameState);
-        }
-    }, {
         key: 'render',
         value: function render() {
             var player = this.state.gameState.player;
@@ -1251,16 +1523,7 @@ var Player = function (_GamePanel) {
                     value: player.points,
                     time: player.pointsCalculationTime,
                     rate: player.pointsRate
-                }),
-                React.createElement(
-                    'p',
-                    null,
-                    React.createElement(
-                        'button',
-                        { onClick: this.onClickButton.bind(this) },
-                        'Begin travelling'
-                    )
-                )
+                })
             );
         }
     }]);
@@ -1270,7 +1533,7 @@ var Player = function (_GamePanel) {
 
 exports.default = Player;
 
-},{"../Utils/Points":11,"./GamePanel":6}],8:[function(require,module,exports){
+},{"../Utils/Points":14,"./GamePanel":7}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1378,7 +1641,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"../utils/FetchJson":13,"./utils/Points":12,"react":"react"}],9:[function(require,module,exports){
+},{"../utils/FetchJson":17,"./utils/Points":16,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1395,9 +1658,9 @@ var _FetchJson = require('../utils/FetchJson');
 
 var _FetchJson2 = _interopRequireDefault(_FetchJson);
 
-var _Points = require('./utils/Points');
+var _Player = require('./utils/Player');
 
-var _Points2 = _interopRequireDefault(_Points);
+var _Player2 = _interopRequireDefault(_Player);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1417,7 +1680,7 @@ var Hub = function (_React$Component) {
 
         _this.refetchInterval = null;
         _this.state = {
-            playersData: []
+            hubData: null
         };
         return _this;
     }
@@ -1426,16 +1689,16 @@ var Hub = function (_React$Component) {
         key: 'componentWillMount',
         value: function componentWillMount() {
             this.setState({
-                playersData: this.props.playersData
+                hubData: this.props.hubData
             });
             setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
         }
     }, {
         key: 'fetchLatestData',
         value: function fetchLatestData() {
-            _FetchJson2.default.getUrl('/hubs/' + this.props.hubKey + '.json', function (data) {
+            _FetchJson2.default.getUrl(this.state.hubData.hub.url + '.json', function (data) {
                 this.setState({
-                    playersData: data.players
+                    hubData: data
                 });
                 setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
             }.bind(this), function (e) {
@@ -1445,28 +1708,89 @@ var Hub = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            if (this.state.playersData.length == 0) {
-                return _react2.default.createElement(
-                    'div',
+            var _this2 = this;
+
+            var hub = this.state.hubData.hub,
+                owner = 'Unowned',
+                playersPresent = _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'p',
                     null,
-                    _react2.default.createElement(
-                        'p',
-                        null,
-                        'No players present in this hub'
-                    )
-                );
+                    'No players present in this hub'
+                )
+            );
+
+            if (this.state.hubData.playersPresent) {
+                (function () {
+
+                    var players = [];
+
+                    _this2.state.hubData.players.forEach(function (player) {
+                        players.push(_react2.default.createElement(
+                            'li',
+                            { key: player.nickname, className: 'g 1/3' },
+                            _react2.default.createElement(_Player2.default, { player: player })
+                        ));
+                    });
+
+                    playersPresent = _react2.default.createElement(
+                        'ul',
+                        { className: 'grid' },
+                        players
+                    );
+                })();
             }
 
-            var players = [];
-
-            this.state.playersData.forEach(function (player) {
-                players.push(_react2.default.createElement(HubPlayer, { key: player.nickname, player: player }));
-            });
+            if (hub.owner) {
+                owner = _react2.default.createElement(_Player2.default, { player: hub.owner });
+            }
 
             return _react2.default.createElement(
-                'ul',
+                'div',
                 null,
-                players
+                _react2.default.createElement(
+                    'h1',
+                    { className: 'g-unit' },
+                    hub.name
+                ),
+                _react2.default.createElement(
+                    'p',
+                    null,
+                    hub.clusterName
+                ),
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    'Owned by:'
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: '1/3' },
+                    owner
+                ),
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    'Clan:'
+                ),
+                _react2.default.createElement(
+                    'div',
+                    null,
+                    '--clan--'
+                ),
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    'Players present'
+                ),
+                playersPresent,
+                _react2.default.createElement(
+                    'h2',
+                    null,
+                    'Abilities available for pickup'
+                )
             );
         }
     }]);
@@ -1476,52 +1800,7 @@ var Hub = function (_React$Component) {
 
 exports.default = Hub;
 
-var HubPlayer = function (_React$Component2) {
-    _inherits(HubPlayer, _React$Component2);
-
-    function HubPlayer() {
-        _classCallCheck(this, HubPlayer);
-
-        return _possibleConstructorReturn(this, (HubPlayer.__proto__ || Object.getPrototypeOf(HubPlayer)).apply(this, arguments));
-    }
-
-    _createClass(HubPlayer, [{
-        key: 'render',
-        value: function render() {
-            var player = this.props.player;
-            return _react2.default.createElement(
-                'li',
-                null,
-                _react2.default.createElement(
-                    'div',
-                    { className: 'grid' },
-                    _react2.default.createElement(
-                        'div',
-                        { className: 'g 1/2' },
-                        _react2.default.createElement(
-                            'a',
-                            { href: player.url },
-                            player.nickname
-                        )
-                    ),
-                    _react2.default.createElement(
-                        'div',
-                        { className: 'g 1/2' },
-                        _react2.default.createElement(_Points2.default, {
-                            value: player.points,
-                            time: player.pointsCalculationTime,
-                            rate: player.pointsRate
-                        })
-                    )
-                )
-            );
-        }
-    }]);
-
-    return HubPlayer;
-}(_react2.default.Component);
-
-},{"../utils/FetchJson":13,"./utils/Points":12,"react":"react"}],10:[function(require,module,exports){
+},{"../utils/FetchJson":17,"./utils/Player":15,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1664,7 +1943,170 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"../utils/FetchJson":13,"./utils/Points":12,"react":"react"}],11:[function(require,module,exports){
+},{"../utils/FetchJson":17,"./utils/Points":16,"react":"react"}],12:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _FetchJson = require('../utils/FetchJson');
+
+var _FetchJson2 = _interopRequireDefault(_FetchJson);
+
+var _Player = require('./Utils/Player');
+
+var _Player2 = _interopRequireDefault(_Player);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Hub = function (_React$Component) {
+    _inherits(Hub, _React$Component);
+
+    function Hub() {
+        _classCallCheck(this, Hub);
+
+        var _this = _possibleConstructorReturn(this, (Hub.__proto__ || Object.getPrototypeOf(Hub)).call(this));
+
+        _this.refetchInterval = null;
+        _this.state = {
+            data: null
+        };
+        return _this;
+    }
+
+    _createClass(Hub, [{
+        key: 'componentWillMount',
+        value: function componentWillMount() {
+            this.setState({
+                data: this.props.initialData
+            });
+            setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
+        }
+    }, {
+        key: 'fetchLatestData',
+        value: function fetchLatestData() {
+            _FetchJson2.default.getUrl('/players.json', function (data) {
+                this.setState({
+                    data: data
+                });
+                setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
+            }.bind(this), function (e) {
+                // fail silently
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var players = [];
+
+            this.state.data.players.forEach(function (player) {
+                players.push(_react2.default.createElement(
+                    'li',
+                    { className: 'g 1/2' },
+                    _react2.default.createElement(_Player2.default, { key: player.nickname, player: player })
+                ));
+            });
+
+            return _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'h1',
+                    { className: 'g-unit' },
+                    'Players'
+                ),
+                _react2.default.createElement(
+                    'ul',
+                    { className: 'grid' },
+                    players
+                )
+            );
+        }
+    }]);
+
+    return Hub;
+}(_react2.default.Component);
+
+exports.default = Hub;
+
+},{"../utils/FetchJson":17,"./Utils/Player":13,"react":"react"}],13:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _Points = require('./Points');
+
+var _Points2 = _interopRequireDefault(_Points);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Player = function (_React$Component) {
+    _inherits(Player, _React$Component);
+
+    function Player() {
+        _classCallCheck(this, Player);
+
+        return _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).apply(this, arguments));
+    }
+
+    _createClass(Player, [{
+        key: 'render',
+        value: function render() {
+            var player = this.props.player;
+            return _react2.default.createElement(
+                'a',
+                { href: player.url, className: 'player' },
+                _react2.default.createElement(
+                    'h4',
+                    { className: 'player__nickname' },
+                    player.nickname
+                ),
+                _react2.default.createElement(
+                    'p',
+                    { className: 'player__points' },
+                    _react2.default.createElement(_Points2.default, {
+                        value: player.points,
+                        time: player.pointsCalculationTime,
+                        rate: player.pointsRate
+                    })
+                )
+            );
+        }
+    }]);
+
+    return Player;
+}(_react2.default.Component);
+
+exports.default = Player;
+
+},{"./Points":14,"react":"react"}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1742,17 +2184,6 @@ var Points = function (_React$Component) {
             return _react2.default.createElement(
                 "span",
                 { className: "points" },
-                _react2.default.createElement(
-                    "span",
-                    { className: "points__icon" },
-                    _react2.default.createElement(
-                        "svg",
-                        {
-                            viewBox: "0 0 104 120",
-                            xmlns: "http://www.w3.org/2000/svg" },
-                        _react2.default.createElement("use", { xlinkHref: "#icon-hexagon" })
-                    )
-                ),
                 this.state.pointValue
             );
         }
@@ -1763,9 +2194,11 @@ var Points = function (_React$Component) {
 
 exports.default = Points;
 
-},{"react":"react"}],12:[function(require,module,exports){
-arguments[4][11][0].apply(exports,arguments)
-},{"dup":11,"react":"react"}],13:[function(require,module,exports){
+},{"react":"react"}],15:[function(require,module,exports){
+arguments[4][13][0].apply(exports,arguments)
+},{"./Points":16,"dup":13,"react":"react"}],16:[function(require,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"dup":14,"react":"react"}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1841,10 +2274,117 @@ var FetchJson = function () {
 
 exports.default = FetchJson;
 
-},{}],"react-dom":[function(require,module,exports){
+},{}],18:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactModal = require('react-modal');
+
+var _reactModal2 = _interopRequireDefault(_reactModal);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Lightbox = function (_React$Component) {
+    _inherits(Lightbox, _React$Component);
+
+    function Lightbox() {
+        _classCallCheck(this, Lightbox);
+
+        var _this = _possibleConstructorReturn(this, (Lightbox.__proto__ || Object.getPrototypeOf(Lightbox)).call(this));
+
+        _this.state = { modalIsOpen: false };
+        return _this;
+    }
+
+    _createClass(Lightbox, [{
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(props) {
+            this.setState({
+                modalIsOpen: props.modalIsOpen
+            });
+        }
+    }, {
+        key: 'show',
+        value: function show() {
+            this.setState({ modalIsOpen: true });
+        }
+    }, {
+        key: 'close',
+        value: function close() {
+            this.setState({ modalIsOpen: false });
+            if (this.props.closeCallback) {
+                this.props.closeCallback();
+            }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            return _react2.default.createElement(
+                _reactModal2.default,
+                {
+                    isOpen: this.state.modalIsOpen,
+                    onRequestClose: this.close.bind(this),
+                    className: 'lightbox__panel',
+                    overlayClassName: 'lightbox__overlay' },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'lightbox__topbar' },
+                    _react2.default.createElement(
+                        'button',
+                        { className: 'lightbox__close', onClick: this.close.bind(this) },
+                        _react2.default.createElement(
+                            'svg',
+                            {
+                                viewBox: '0 0 24 24',
+                                xmlns: 'http://www.w3.org/2000/svg' },
+                            _react2.default.createElement('use', { xlinkHref: '#icon-close' })
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'p',
+                        { className: 'lightbox__title' },
+                        this.props.title
+                    )
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'lightbox__body' },
+                    this.props.children
+                )
+            );
+        }
+    }]);
+
+    return Lightbox;
+}(_react2.default.Component);
+
+exports.default = Lightbox;
+;
+
+},{"react":"react","react-modal":"react-modal"}],"react-dom":[function(require,module,exports){
 "use strict";
 
 module.exports = window.ReactDOM;
+
+},{}],"react-modal":[function(require,module,exports){
+"use strict";
+
+module.exports = window.ReactModal;
 
 },{}],"react":[function(require,module,exports){
 "use strict";

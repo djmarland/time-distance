@@ -1,7 +1,11 @@
 .map {
     overflow: hidden;
     background: $color-white;
-    background: radial-gradient(circle at center, $color-white 0%, $color-grey-dark 150%);
+    background: radial-gradient(circle at center, $color-grey-mid 0%, $color-grey-lightest 80%);
+}
+
+.map__board {
+    transform: perspective(500px) rotateX(40deg);
 }
 
 .map__grid {
@@ -20,6 +24,7 @@
 }
 
 .map__hub--current {
+    stroke-width: $size-grid-unit-small;
     stroke: $color-black;
 }
 

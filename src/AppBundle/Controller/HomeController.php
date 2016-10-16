@@ -13,6 +13,13 @@ class HomeController extends Controller
         $this->cacheTime = 3600;
         $this->toView('allowRedirect', $this->request->get('allowRedirect'));
 
+        // get latest movements
+
+        // get latest transactions
+        $conflicts = $this->get('app.services.transactions')->findLatestConflictTransactions(10);
+
+        $this->toView('conflicts', $conflicts);
+        $this->toView('hasConflicts', !empty($conflicts));
         return $this->renderTemplate('home:index');
     }
 

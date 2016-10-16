@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use GameService\Domain\Entity\Ability;
+use GameService\Domain\Entity\Hub;
 use GameService\Domain\Entity\Map;
 use GameService\Domain\Entity\Player;
 use GameService\Domain\Entity\Position;
@@ -25,6 +27,8 @@ class GameController extends Controller
     public function arrivalAction()
     {
         // todo - this is temporary. find a better way
+
+        // set where the player is
         $this->setPlayerPosition($this->getPlayer());
         return $this->renderStatus();
     }
@@ -119,6 +123,7 @@ class GameController extends Controller
     public function takeHubAction()
     {
         $player = $this->getPlayer();
+        $cost = $this->getParameter('original_purchase_cost');
 
         // get the current players position
         $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
@@ -141,12 +146,12 @@ class GameController extends Controller
         }
 
         // only possible if the player has the original purchase cost available
-        if ($player->getPoints() < $this->getParameter('original_purchase_cost')) {
+        if ($player->getPoints() < $cost) {
             throw new HttpException(400, 'Invalid move (not enough points to do this). No cheating!');
         }
 
         // now we are ready to take ownership
-        $this->get('app.services.hubs')->takeOwnership($position->getLocation(), $player);
+        $this->get('app.services.hubs')->takeOwnership($position->getLocation(), $player, $cost);
 
         return $this->renderStatus();
     }
@@ -164,12 +169,26 @@ class GameController extends Controller
         if (!$position->isInHub()) {
             // check if the player should be moved into a hub
             if ($position->getExitTime() <= $this->get('app.time_provider')) {
-                $this->get('app.services.players')->movePlayerToHub(
-                    $player,
-                    $position->getLocation()->getDestinationHubFromDirection($position->isReverseDirection())
-                );
+                $hub = $position->getLocation()->getDestinationHubFromDirection($position->isReverseDirection());
+
+                $this->get('app.services.players')->movePlayerToHub($player, $hub);
+
+                // randomly assign some abilities to this hub
+                // todo - this action should happen via a different trigger (as it is not in a transaction)
+                $this->spawnAbilitiesInHub($hub);
             }
         }
+    }
+
+    private function spawnAbilitiesInHub(Hub $hub)
+    {
+        $abilities = $this->get('app.services.abilities')->findAll();
+        // which abilities should be chosen
+        $chosenAbilities = array_filter($abilities, function($ability) {
+            /** @var Ability $ability */
+            return $ability->shouldSpawn();
+        });
+        $this->get('app.services.hubs')->addAbilities($hub, $chosenAbilities);
     }
 
     private function renderStatus()
@@ -198,22 +217,82 @@ class GameController extends Controller
         $this->toView('player', $player, true);
         $this->toView('map', $map, true);
         $this->toView('position', $position, true);
-        $this->toView('directions', $directions, true); // todo - remove (replaced with map)
+
+        // get the abilities (and check against the player)
+        $abilities = $this->get('app.services.abilities')->findAll();
 
         $playersPresent = [];
+        $abilitiesPresent = [];
         if ($position->isInHub()) {
             $playersPresent = $this->get('app.services.players')
                 ->findInHub($position->getLocation());
+
+            // find abilities in the hub
+            foreach($position->getLocation()->getPresentAbilityIds() as $id) {
+                foreach ($abilities as $ability) {
+                    if ($ability->getId() == $id) {
+                        $abilitiesPresent[] = $ability;
+                    }
+                }
+            }
         }
 
         $this->toView('playersPresent', $playersPresent, true);
+        $this->toView('abilitiesPresent', $abilitiesPresent, true);
+
+        // sort the abilities into type groups
+        // and hide them if they are mystery and this player has not seen them
+        $abilityGroups = [];
+        $currentGroupKey = null;
+        $currentGroup = [];
+        foreach ($abilities as $ability) {
+            /** @var Ability $ability */
+            $typeKey = $ability->getType();
+            if ($currentGroupKey != $typeKey) {
+                if (!is_null($currentGroupKey)) {
+                    $abilityGroups[] = $currentGroup;
+                }
+                $currentGroup = [];
+                $currentGroup['title'] = $typeKey;
+                $currentGroup['items'] = [];
+                $currentGroupKey = $typeKey;
+            }
+            if ($ability->isMystery()
+                // todo (&& player has not already seen it)
+            ) {
+                $currentGroup['items'][] = [
+                    'mystery' => true
+                ];
+            } else {
+                $currentGroup['items'][] = [
+                    'mystery' => false,
+                    'ability' => $ability,
+                    'count' => mt_rand(0,4), // todo - actual count from player
+                ];
+            }
+        }
+        if (!empty($currentGroup)) {
+            $abilityGroups[] = $currentGroup;
+        }
+
+        // remove any groups where all items within it are mystery (likely only the disputed group)
+        $abilityGroups = array_filter($abilityGroups, function($group) {
+            foreach ($group['items'] as $item) {
+                if ($item['mystery'] === false) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        $this->toView('abilities', $abilityGroups, true);
 
         return $this->renderJSON();
     }
 
     private function getPlayer(): Player
     {
-        $nickname = 'djmarland';
+        $nickname = 'e7400f94';
         // @todo - fetch by cookie token
         try {
             return $this->get('app.services.players')

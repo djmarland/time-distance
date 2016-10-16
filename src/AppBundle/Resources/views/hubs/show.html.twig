@@ -1,32 +1,32 @@
 {% extends 'AppBundle::base.html.twig' %}
 
 {% block body %}
-    <h1 class="g-unit">{{ hub.name }}</h1>
-    <p>{{ hub.clusterName }}</p>
-    <p>Owned by: -player-</p>
-    <p>Clan: -clan-</p>
+    <div id="app-hub" data-initial="{{ feedData|json_encode }}" data-hubkey={{ hub.urlKey }}>
+        <h1 class="g-unit">{{ hub.name }}</h1>
+        <p>{{ hub.clusterName }}</p>
+        <h2>Owned by:</h2>
+        {% if hub.owner %}
+            <div class="1/3">
+                {% include '@partials/_player.html.twig' with {player:hub.owner} %}
+            </div>
+        {% else %}
+            Unowned
+        {% endif %}
+        <p>Clan: -clan-</p>
 
-    <h2>Players present</h2>
-    <div id="app-hub" data-initial="{{ playersData }}" data-hubkey={{ hub.urlKey }}>
+        <h2>Players present</h2>
         {% if playersPresent %}
-                <ul>
+                <ul class="grid">
                     {% for player in players %}
-                        <li>
-                            <div class="grid">
-                                <div class="g 1/2">
-                                    <a href="{{ player.url }}">{{ player.nickname }}</a>
-                                </div>
-                                <div class="g 1/2">
-                                    {{ player.pointsEstimate }}
-                                </div>
-                            </div>
+                        <li class="g 1/3">
+                            {% include '@partials/_player.html.twig' with {player:player} %}
                         </li>
                     {% endfor %}
                 </ul>
         {% else %}
             <p>No players present in this hub</p>
         {% endif %}
-    </div>
 
-    <h2>Abilities available for pickup</h2>
+        <h2>Abilities available for pickup</h2>
+    </div>
 {% endblock %}

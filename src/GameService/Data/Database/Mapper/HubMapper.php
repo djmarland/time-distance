@@ -3,6 +3,7 @@
 namespace GameService\Data\Database\Mapper;
 
 use GameService\Domain\Entity\Hub;
+use GameService\Domain\Entity\Null\NullPlayer;
 
 class HubMapper extends Mapper
 {
@@ -15,9 +16,20 @@ class HubMapper extends Mapper
         }
 
         $owner = null;
-        if (isset($item['owner'])) {
-            $owner = $this->mapperFactory->createPlayerMapper()
-                ->getDomainModel($item['owner']);
+        if (array_key_exists('owner', $item)) {
+            if (!is_null($item['owner'])) {
+                $owner = $this->mapperFactory->createPlayerMapper()
+                    ->getDomainModel($item['owner']);
+            }
+        } else {
+            $owner = new NullPlayer();
+        }
+
+        $presentAbilities = [];
+        if (isset($item['status'])) {
+            if (isset($item['status']['abilities'])) {
+                $presentAbilities = $item['status']['abilities'];
+            }
         }
 
         return new Hub(
@@ -29,7 +41,8 @@ class HubMapper extends Mapper
             $item['isHaven'],
             $item['protectionScore'],
             $cluster,
-            $owner
+            $owner,
+            $presentAbilities
         );
     }
 }

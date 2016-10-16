@@ -1,19 +1,19 @@
 import React from 'react';
 import FetchJson from '../utils/FetchJson';
-import Points from './utils/Points';
+import Player from './utils/Player';
 
 export default class Hub extends React.Component {
     constructor() {
         super();
         this.refetchInterval = null;
         this.state = {
-            playersData : []
+            hubData : null
         };
     };
 
     componentWillMount() {
         this.setState({
-            playersData : this.props.playersData
+            hubData : this.props.hubData
         });
         setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
     }
@@ -21,10 +21,10 @@ export default class Hub extends React.Component {
 
     fetchLatestData() {
         FetchJson.getUrl(
-            '/hubs/' + this.props.hubKey + '.json',
+            this.state.hubData.hub.url + '.json',
             function(data) {
                 this.setState({
-                    playersData : data.players
+                    hubData : data
                 });
                 setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
             }.bind(this),
@@ -35,48 +35,55 @@ export default class Hub extends React.Component {
     }
 
     render() {
-        if (this.state.playersData.length == 0) {
-            return (
+        let hub = this.state.hubData.hub,
+            owner = 'Unowned',
+            playersPresent = (
                 <div>
                     <p>No players present in this hub</p>
                 </div>
             );
+
+        if (this.state.hubData.playersPresent) {
+
+            let players = [];
+
+            this.state.hubData.players.forEach(function (player) {
+                players.push(
+                    <li key={player.nickname} className="g 1/3">
+                        <Player player={player}/>
+                    </li>
+                );
+            });
+
+            playersPresent = (
+                <ul className="grid">
+                    {players}
+                </ul>
+            );
         }
 
-        let players = [];
-
-        this.state.playersData.forEach(function(player) {
-           players.push(
-               <HubPlayer key={player.nickname} player={player} />
-           );
-        });
+        if (hub.owner) {
+            owner = (
+                <Player player={hub.owner} />
+            );
+        }
 
         return (
-            <ul>
-                {players}
-            </ul>
+            <div>
+                <h1 className="g-unit">{ hub.name }</h1>
+                <p>{ hub.clusterName }</p>
+
+                <h2>Owned by:</h2>
+                <div className="1/3">{owner}</div>
+
+                <h2>Clan:</h2>
+                <div>--clan--</div>
+
+                <h2>Players present</h2>
+                {playersPresent}
+
+                <h2>Abilities available for pickup</h2>
+            </div>
         );
     };
-}
-
-class HubPlayer extends React.Component {
-    render() {
-        let player = this.props.player;
-        return (
-            <li>
-                <div className="grid">
-                    <div className="g 1/2">
-                        <a href={player.url}>{player.nickname}</a>
-                    </div>
-                    <div className="g 1/2">
-                        <Points
-                            value={player.points}
-                            time={player.pointsCalculationTime}
-                            rate={player.pointsRate}
-                        />
-                    </div>
-                </div>
-            </li>
-        );
-    }
 }

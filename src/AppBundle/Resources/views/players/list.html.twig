@@ -1,10 +1,12 @@
 {% extends 'AppBundle::base.html.twig' %}
 
 {% block body %}
-    <h1 class="g-unit">Players</h1>
-    <ul>
-        {% for player in players %}
-            <li><a href="{{ player.url }}">{{ player.nickname }}</a></li>
-        {% endfor %}
-    </ul>
+    <div id="app-players-list" data-initial="{{ feedData|json_encode }}">
+        <h1 class="g-unit">Players</h1>
+        <ul class="grid">
+            {% for player in players %}
+                <li class="g 1/2">{% include '@partials/_player.html.twig' with {player:player} %}</li>
+            {% endfor %}
+        </ul>
+    </div>
 {% endblock %}

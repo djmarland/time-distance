@@ -2,6 +2,7 @@
 
 namespace GameService\Domain\Entity;
 
+use GameService\Domain\Entity\Null\NullPlayer;
 use GameService\Domain\Exception\DataNotFetchedException;
 
 class Hub extends Entity implements \JsonSerializable
@@ -14,6 +15,7 @@ class Hub extends Entity implements \JsonSerializable
     private $isHaven;
     private $protectionScore;
     private $owner;
+    private $presentAbilityIds;
 
     public function __construct(
         int $id,
@@ -24,7 +26,8 @@ class Hub extends Entity implements \JsonSerializable
         bool $isHaven,
         int $protectionScore = null,
         Cluster $cluster = null,
-        Player $owner = null
+        Player $owner = null,
+        array $presentAbilityIds = []
     ) {
         parent::__construct($id);
 
@@ -36,6 +39,7 @@ class Hub extends Entity implements \JsonSerializable
         $this->isHaven = $isHaven;
         $this->protectionScore = $protectionScore;
         $this->owner = $owner;
+        $this->presentAbilityIds = $presentAbilityIds;
     }
 
     public function getName(): string
@@ -65,9 +69,16 @@ class Hub extends Entity implements \JsonSerializable
 
     /**
      * @return Player|null
+     * @throws DataNotFetchedException
      */
     public function getOwner()
     {
+        // null means this hub has no owner. NullPlayer means the data wasn't fetched
+        if ($this->owner instanceof NullPlayer) {
+            throw new DataNotFetchedException(
+                'Tried to fetch hub owner but the data was not available'
+            );
+        }
         return $this->owner;
     }
 
@@ -94,16 +105,28 @@ class Hub extends Entity implements \JsonSerializable
         return '/hubs/' . $this->getUrlKey();
     }
 
+    public function getPresentAbilityIds(): array
+    {
+        return $this->presentAbilityIds;
+    }
+
     public function jsonSerialize()
     {
-        return [
+        $data = [
             'type' => 'hub',
             'url' => $this->getUrl(),
             'name' => $this->getName(),
             'isHaven' => $this->isHaven(),
             'protectionScore' => $this->getProtectionScore(),
-            'cluster' => $this->getCluster(),
-            'owner' => $this->getOwner(),
         ];
+
+        if (!($this->owner instanceof NullPlayer)) {
+            $data['owner'] = $this->getOwner();
+        }
+
+        if (!is_null($this->cluster)) {
+            $data['cluster'] = $this->getCluster();
+        }
+        return $data;
     }
 }

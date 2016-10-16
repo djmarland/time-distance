@@ -1,0 +1,20 @@
+.player {
+    display: block;
+    border-radius: $size-grid-unit-tiny;
+    background: $color-grey-lightest;
+    padding: $size-grid-unit;
+    color: $color-body-text;
+    &:hover,
+    &:active,
+    &:focus {
+        background: $color-grey-light;
+    }
+}
+
+.player__nickname {
+    @extend .c;
+    display: block;
+}
+.player__points {
+    @extend .d;
+}

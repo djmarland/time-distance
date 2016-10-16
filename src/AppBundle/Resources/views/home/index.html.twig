@@ -12,6 +12,14 @@
         <li>etc</li>
     </ul>
 
+    {% if hasConflicts %}
+        <h2>Recent conflicts</h2>
+        <ul>
+            {% for conflict in conflicts %}
+                <li>{{ conflict.text }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}
 
 {% block footerScripts %}

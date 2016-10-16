@@ -91,4 +91,14 @@ class Player extends Entity
     {
         return $this->homeHub;
     }
+
+    public function deductPoints(int $points)
+    {
+        $this->points = $this->points - $points;
+    }
+
+    public function addPoints(int $points)
+    {
+        $this->points = $this->points + $points;
+    }
 }

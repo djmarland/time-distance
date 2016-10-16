@@ -1,0 +1,15 @@
+.abilities-list {
+    @extend .list--unstyled;
+}
+
+.abilities-list__item {
+    width: 120px;
+}
+
+.abilities-list__group-heading {
+    padding: $size-grid-unit-tiny;
+    display: block;
+    background: $color-grey-lightest;
+    text-transform: uppercase;
+    margin-bottom: $size-grid-unit-small;
+}

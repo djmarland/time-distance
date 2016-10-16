@@ -19,7 +19,7 @@ hub_show:
   defaults: { _controller: AppBundle:Hubs:show, format: null }
 
 player_list:
-  path:     /players
+  path:     /players.{format}
   defaults: { _controller: AppBundle:Players:list, format: null }
 
 player_show:

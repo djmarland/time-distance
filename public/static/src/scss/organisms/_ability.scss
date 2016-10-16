@@ -1,0 +1,36 @@
+.ability {
+    display: block;
+    border: 0;
+    background: $color-grey-dark;
+    color: $color-white;
+    border-radius: $size-grid-unit-tiny;
+    text-align: center;
+    width: 100%;
+    position: relative;
+    &:hover,
+    &:focus {
+        background: $color-grey-mid;
+    }
+    &:active {
+        background: $color-grey-darkest;
+        top: 1px;
+    }
+}
+
+.ability__name {
+    display: block;
+    padding: $size-grid-unit $size-grid-unit-small;
+}
+
+.ability__count {
+    display: block;
+    background: $color-grey-darkest;
+    padding: $size-grid-unit-tiny;
+    border-bottom-left-radius: $size-grid-unit-tiny;
+    border-bottom-right-radius: $size-grid-unit-tiny;
+}
+
+.ability--empty,
+.ability--mystery {
+    opacity: 0.4;
+}

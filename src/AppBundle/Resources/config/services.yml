@@ -23,6 +23,11 @@ services:
           - "Time and Distance"
 #          - "@app.email.from_name"
 
+  app.services.abilities:
+      class: GameService\Service\AbilitiesService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
 
   app.services.hubs:
       class: GameService\Service\HubsService
@@ -44,6 +49,12 @@ services:
 
   app.services.spokes:
       class: GameService\Service\SpokesService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
+
+  app.services.transactions:
+      class: GameService\Service\TransactionsService
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"

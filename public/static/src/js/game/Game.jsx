@@ -1,6 +1,7 @@
 import React from 'react';
 import Board from './GamePanel/Board';
 import Player from './GamePanel/Player';
+import Abilities from './GamePanel/Abilities';
 
 export default class Game extends React.Component {
     static get PANEL_BOARD() { return 'board'; }
@@ -46,7 +47,11 @@ export default class Game extends React.Component {
                     <Player gameState={this.state.gameState} onGameUpdate={this.updateGameState.bind(this)} />
                 </div>
             );
-            panels.push(<div key="panel-abilities" className={"game__panel game__panel--abilities g 1/2@xl " + abilitiesClass}>ABILITIES</div>);
+            panels.push(
+                <div key="panel-abilities" className={"game__panel game__panel--abilities g 1/2@xl " + abilitiesClass}>
+                    <Abilities gameState={this.state.gameState} onGameUpdate={this.updateGameState.bind(this)} />
+                </div>
+            );
         }
 
 

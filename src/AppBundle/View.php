@@ -71,6 +71,9 @@ class View
         foreach ($this->data as $key => $value) {
             $data[$key] = $value->data;
         }
+
+        // add the feed data
+        $data['feedData'] = $this->getFeedData(true);
         return $data;
     }
 

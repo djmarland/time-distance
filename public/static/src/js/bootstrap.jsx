@@ -4,6 +4,7 @@ import FetchJson from './utils/FetchJson';
 import Game from './game/Game';
 import Hub from './game/Hub';
 import Player from './game/Player';
+import Players from './game/Players';
 import Header from './game/Header';
 
 (function() {
@@ -13,6 +14,7 @@ import Header from './game/Header';
         appGame = document.getElementById('app-game'),
         appHub = document.getElementById('app-hub'),
         appPlayer = document.getElementById('app-player'),
+        appPlayersList = document.getElementById('app-players-list'),
         updateInterval = (20 * 1000);
 
     function unsupported() {
@@ -23,7 +25,7 @@ import Header from './game/Header';
 
     function init() {
 
-        // todo - get the header to update dynamically?
+        // todo - get the header to update dynamically (when hearing an event)?
 
         if (appHeader) {
             // todo - use initial state if present?
@@ -62,18 +64,16 @@ import Header from './game/Header';
         }
 
         if (appHub) {
-            // todo - initial should be whole dataset (and then not need a hubkey)
-            let playersData = appHub.dataset.initial;
+            let hubData = appHub.dataset.initial;
 
-            if (playersData) {
-                playersData = JSON.parse(playersData);
+            if (hubData) {
+                hubData = JSON.parse(hubData);
             } else {
-                playersData = [];
+                hubData = [];
             }
             ReactDOM.render(
                 <Hub
-                    playersData={playersData}
-                    hubKey={appHub.dataset.hubkey}
+                    hubData={hubData}
                     updateInterval={updateInterval}
                 />,
                 appHub
@@ -90,6 +90,19 @@ import Header from './game/Header';
                 appPlayer
             );
         }
+
+        if (appPlayersList) {
+            let initialData = JSON.parse(appPlayersList.dataset.initial);
+            ReactDOM.render(
+                <Players
+                    initialData={initialData}
+                    updateInterval={updateInterval}
+                />,
+                appPlayersList
+            );
+        }
+
+        // todo - reuse code in this bootstrap file
     }
 
     if (

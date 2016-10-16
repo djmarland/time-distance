@@ -87,6 +87,15 @@ export default class Board extends GamePanel {
             );
         }
 
+        let abilities = [];
+        if (gameState.abilitiesPresent && gameState.abilitiesPresent.length > 0) {
+            gameState.abilitiesPresent.forEach(function(ability, i) {
+                abilities.push(
+                    <p key={i}>{ability.name}</p>
+                );
+            });
+        }
+
         return (
             <div className="grid grid--flat">
                 <div className="g 2/3@xl">
@@ -94,9 +103,12 @@ export default class Board extends GamePanel {
                 </div>
                 <div className="g 1/3@xl game__panel--location">
                     {location}
-                    <hr />
                     {playersPresent}
+                    <div>
+                        <h2>Abilities here</h2>
+                        {abilities}
                     </div>
+                </div>
             </div>
         );
     };

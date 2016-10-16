@@ -4,7 +4,7 @@ import React from 'react';
 export default class Map extends GamePanel {
     constructor() {
         super();
-        this.hexRadius = 20;//32;
+        this.hexRadius = 32;
         this.averageVerticalDiameter = 1.5 * this.hexRadius;
         this.innerRadius = (Math.sqrt(3)/2) * this.hexRadius;
         this.innerDiameter = this.innerRadius * 2;
@@ -182,14 +182,13 @@ export default class Map extends GamePanel {
 
     render() {
         this.calculateLayout();
-
         let grid = this.drawGrid(),
             current = this.drawCurrentHub(),
             hubs = this.drawHubs(),
             spokes = this.drawSpokes();
         return (
             <div className="map" ref="mapContainer">
-                <svg xmlns="http://www.w3.org/2000/svg"
+                <svg className="map__board" xmlns="http://www.w3.org/2000/svg"
                      width={this.state.containerWidth}
                      height={this.state.containerHeight}>
                     {grid}

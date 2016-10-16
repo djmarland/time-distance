@@ -3,7 +3,6 @@
 namespace GameService\Service;
 
 use DateTimeImmutable;
-use DateTimeInterface;
 use Doctrine\ORM\QueryBuilder;
 use Exception;
 use GameService\Data\Database\Entity\Hub as HubEntity;
@@ -18,6 +17,8 @@ use GameService\Domain\ValueObject\Nickname;
 
 class PlayersService extends Service
 {
+    use Traits\PlayerScoreTrait;
+
     const ENTITY = 'Player';
 
     public function findAll()
@@ -207,6 +208,21 @@ class PlayersService extends Service
 
         // we're moving from a hub to a spoke. The point rate loses 1
         $pointRate = $playerEntity->getPointsRate() - 1;
+
+        // is the hub owned by another player?
+        /** @var PlayerEntity $owner */
+        $owner = $hubEntity->getOwner();
+        if ($owner && $owner->getId() != $playerEntity->getId()) {
+            // calculate an up to date score for this owner
+            $owner = $this->updatePlayerScore($owner);
+
+            // increase the owners score for the new arrival
+            $owner->setPointsRate($owner->getPointsRate() + 1);
+
+            // decrease the squatters score
+            $pointRate--;
+        }
+
         $playerEntity->setPointsRate($pointRate);
 
         // start transaction
@@ -222,6 +238,10 @@ class PlayersService extends Service
             $this->entityManager->persist($newPosition);
 
             $this->entityManager->persist($playerEntity);
+
+            if ($owner) {
+                $this->entityManager->persist($owner);
+            }
 
             // complete the transaction
             $this->entityManager->flush();
@@ -260,11 +280,28 @@ class PlayersService extends Service
             ->setMaxResults(1)
             ->getQuery()->getOneOrNullResult();
 
+        $hubLeaving = $position->getHub();
+
         // we need to save the players accurate score
         $playerEntity = $this->updatePlayerScore($playerEntity);
 
         // we're moving from a hub to a spoke. The point rate gains 1
         $pointRate = $playerEntity->getPointsRate() + 1;
+
+        // was the hub just left owned by another player?
+        /** @var PlayerEntity $owner */
+        $owner = $hubLeaving->getOwner();
+        if ($owner && $owner->getId() != $playerEntity->getId()) {
+            // calculate an up to date score for this owner
+            $owner = $this->updatePlayerScore($owner);
+
+            // derease the owners score for the departed
+            $owner->setPointsRate($owner->getPointsRate() - 1);
+
+            // increase the squatters score
+            $pointRate++;
+        }
+
         $playerEntity->setPointsRate($pointRate);
 
         // start transaction
@@ -283,6 +320,10 @@ class PlayersService extends Service
 
             $this->entityManager->persist($playerEntity);
 
+            if ($owner) {
+                $this->entityManager->persist($owner);
+            }
+
             // complete the transaction
             $this->entityManager->flush();
             $this->commit();
@@ -291,21 +332,6 @@ class PlayersService extends Service
             $this->rollback();
             throw $e;
         }
-    }
-
-    private function updatePlayerScore(PlayerEntity $player, DateTimeInterface $time = null): PlayerEntity
-    {
-        if (!$time) {
-            $time = $this->appTimeProvider;
-        }
-
-        $secondsBetween = $time->format('U') - $player->getPointsCalculationTime()->format('U');
-        $pointsEarned = $player->getPoints() + ($secondsBetween * $player->getPointsRate());
-
-        $player->setPoints($pointsEarned);
-        $player->setPointsCalculationTime($time);
-
-        return $player;
     }
 
     private function getPlayersResult(QueryBuilder $qb): array

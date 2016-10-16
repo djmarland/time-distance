@@ -14,11 +14,13 @@ var staticPathSrc = 'public/static/src/',
 var vendorSrc = {
     dev : [
         staticPathSrc + 'js/vendor/react.js',
-        staticPathSrc + 'js/vendor/react-dom.js'
+        staticPathSrc + 'js/vendor/react-dom.js',
+        staticPathSrc + 'js/vendor/react-modal.js'
     ],
     prod : [
         staticPathSrc + 'js/vendor/react.min.js',
-        staticPathSrc + 'js/vendor/react-dom.min.js'
+        staticPathSrc + 'js/vendor/react-dom.min.js',
+        staticPathSrc + 'js/vendor/react-modal.min.js'
     ]
 };
 
@@ -49,7 +51,8 @@ gulp.task('js-bootstrap', function() {
     })
         .transform('babelify', {presets: ['es2015', 'react']})
         .require('./' + staticPathSrc + 'js/import-react.js', {expose: 'react'})
-        .require('./' + staticPathSrc + 'js/import-react-dom.js', {expose: 'react-dom'});
+        .require('./' + staticPathSrc + 'js/import-react-dom.js', {expose: 'react-dom'})
+        .require('./' + staticPathSrc + 'js/import-react-modal.js', {expose: 'react-modal'});
 
     return appBundler.bundle()
         .pipe(source('bootstrap.js'))

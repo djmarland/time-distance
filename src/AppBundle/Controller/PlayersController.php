@@ -10,11 +10,11 @@ class PlayersController extends Controller
 {
     public function listAction()
     {
-        // todo - hide from public
+        // todo - hide from public. Make this view just about stats etc
         $players = $this->get('app.services.players')
             ->findAll();
 
-        $this->toView('players', $players);
+        $this->toView('players', $players, true);
 
         return $this->renderTemplate('players:list', 'Players');
     }

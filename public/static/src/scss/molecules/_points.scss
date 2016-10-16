@@ -1,13 +1,14 @@
 .points {
-
-}
-.points__icon {
-    display: inline-block;
-    vertical-align: top;
-    width: 14px;
-    height: 18px;
-    fill: currentColor;
-    margin-right: $size-grid-unit-small;
+    padding-left: 24px;
     position: relative;
-    top: 3px;
+
+    &:before {
+        content: '\2b22';
+        font-size: 24px;
+        vertical-align: middle;
+        margin-right: 4px;
+        position: absolute;
+        left: 0;
+        top: -6px;
+    }
 }

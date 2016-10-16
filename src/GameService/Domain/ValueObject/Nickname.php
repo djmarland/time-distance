@@ -11,7 +11,7 @@ class Nickname implements \JsonSerializable
     public function __construct(
         string $nickname
     ) {
-        $nickname = self::validate($nickname);
+        $nickname = static::validate($nickname);
         $this->nickname = $nickname;
     }
 

@@ -48,9 +48,8 @@ class HubsController extends Controller
         $players = $this->get('app.services.players')
             ->findInHub($hub);
 
-        $this->toView('playersPresent', !!count($players));
+        $this->toView('playersPresent', !!count($players), true);
         $this->toView('players', $players, true);
-        $this->toView('playersData', json_encode($players));
 
         return $this->renderTemplate('hubs:show', $hub->getName());
     }

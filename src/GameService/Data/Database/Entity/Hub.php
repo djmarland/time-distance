@@ -28,6 +28,9 @@ class Hub extends Entity
     /** @ORM\Column(type="integer", nullable=true) */
     private $protectionScore;
 
+    /** @ORM\Column(type="array", nullable=true) */
+    private $status;
+
     /**
      * @ORM\ManyToOne(targetEntity="Cluster")
      * @ORM\JoinColumn(onDelete="CASCADE")
@@ -107,5 +110,15 @@ class Hub extends Entity
     public function setProtectionScore(int $score = null)
     {
         $this->protectionScore = $score;
+    }
+
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    public function setStatus(array $status = null)
+    {
+        $this->status = $status;
     }
 }
