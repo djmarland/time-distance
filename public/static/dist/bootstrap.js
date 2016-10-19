@@ -576,22 +576,9 @@ var Board = function (_GamePanel) {
         value: function render() {
             var gameState = this.state.gameState;
             if (!gameState.position.isInHub) {
-                return React.createElement(
-                    'div',
-                    { className: 'grid grid--flat' },
-                    React.createElement(
-                        'div',
-                        { className: 'g 2/3@xl' },
-                        React.createElement(_Map2.default, { gameState: this.state.gameState })
-                    ),
-                    React.createElement(
-                        'div',
-                        { className: 'g 1/3@xl game__panel--location' },
-                        React.createElement(_Spoke2.default, {
-                            onGameStateChange: this.updateGlobalGameState.bind(this),
-                            position: gameState.position })
-                    )
-                );
+                return React.createElement(_Spoke2.default, {
+                    onGameStateChange: this.updateGlobalGameState.bind(this),
+                    position: gameState.position });
             }
 
             var location = React.createElement(BoardLocationHub, { onTakeHub: this.takeHub.bind(this), gameState: gameState });
@@ -601,10 +588,10 @@ var Board = function (_GamePanel) {
                 (function () {
                     var players = [];
 
-                    gameState.playersPresent.forEach(function (player) {
+                    gameState.playersPresent.forEach(function (player, i) {
                         players.push(React.createElement(
                             'li',
-                            { className: 'g 1/2', key: player.nickname },
+                            { className: 'g 1/2', key: i },
                             React.createElement(
                                 'h5',
                                 null,
@@ -876,14 +863,16 @@ var Map = function (_GamePanel) {
     _createClass(Map, [{
         key: 'handleSize',
         value: function handleSize() {
-            var _refs$mapContainer = this.refs.mapContainer;
-            var clientHeight = _refs$mapContainer.clientHeight;
-            var clientWidth = _refs$mapContainer.clientWidth;
+            if (this.refs.mapContainer) {
+                var _refs$mapContainer = this.refs.mapContainer;
+                var clientHeight = _refs$mapContainer.clientHeight;
+                var clientWidth = _refs$mapContainer.clientWidth;
 
-            this.setState({
-                containerHeight: clientHeight,
-                containerWidth: clientWidth
-            });
+                this.setState({
+                    containerHeight: clientHeight,
+                    containerWidth: clientWidth
+                });
+            }
         }
     }, {
         key: 'componentDidMount',
@@ -1159,6 +1148,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+// import THREE from 'three'; // todo - figure out why this isn't importing properly
+
 
 var Spoke = function (_React$Component) {
     _inherits(Spoke, _React$Component);
@@ -1171,21 +1162,126 @@ var Spoke = function (_React$Component) {
         _this.allowAnimationUpdate = false;
         _this.state = {
             timeLeft: null,
-            positionStyle: null
+            containerWidth: null,
+            containerHeight: null
         };
+        _this.scene = null;
+        _this.camera = null;
+        _this.renderer = null;
+        _this.tunnelTexture = null;
+        _this.clock = null;
         return _this;
     }
 
     _createClass(Spoke, [{
-        key: 'componentWillMount',
-        value: function componentWillMount() {
+        key: 'handleSize',
+        value: function handleSize() {
+            if (this.refs.visualContainer) {
+                var _refs$visualContainer = this.refs.visualContainer;
+                var clientHeight = _refs$visualContainer.clientHeight;
+                var clientWidth = _refs$visualContainer.clientWidth;
+
+                this.setState({
+                    containerHeight: clientHeight,
+                    containerWidth: clientWidth
+                });
+            }
+        }
+    }, {
+        key: 'makeScene',
+        value: function makeScene() {
+            var _refs$visualContainer2 = this.refs.visualContainer;
+            var clientHeight = _refs$visualContainer2.clientHeight;
+            var clientWidth = _refs$visualContainer2.clientWidth; // todo - handle a resize
+
+            // scene
+
+            this.scene = new THREE.Scene();
+
+            // renderer
+            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            this.renderer.setClearColor(0xffffff, 1);
+            this.renderer.setSize(clientWidth, clientHeight);
+
+            // camera
+            this.camera = new THREE.PerspectiveCamera(75, clientWidth / clientHeight, 0.1, 1000);
+            this.camera.position.z = -100;
+            this.camera.lookAt(this.scene.position);
+
+            var loader = new THREE.TextureLoader();
+            // load a resource
+            loader.load(
+            // resource URL
+            '/static/dist/img/spoke.png',
+            // Function when resource is loaded
+            function (texture) {
+                // do something with the texture
+                // var material = new THREE.MeshBasicMaterial( {
+                //     map: texture
+                // } );
+                this.tunnelTexture = texture;
+                this.tunnelTexture.wrapT = this.tunnelTexture.wrapS = THREE.RepeatWrapping;
+                this.tunnelTexture.repeat.set(1, 2);
+
+                // Tunnel Mesh
+                var color = 0x999999,
+                    tunnelMesh = new THREE.Mesh(new THREE.CylinderGeometry(4, 50, 1024, 6, 32, true), new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    alphaMap: this.tunnelTexture,
+                    side: THREE.BackSide
+                }));
+                tunnelMesh.rotation.x = Math.PI / 2;
+                tunnelMesh.rotation.y = Math.PI / 2;
+                tunnelMesh.position.z = 0;
+                this.scene.add(tunnelMesh);
+            }.bind(this));
+
+            // tunnel
+            // THREE.ImageUtils.crossOrigin = '';
+            // this.tunnelTexture = THREE.ImageUtils.loadTexture('/static/dist/img/spoke.jpg');
+            // this.tunnelTexture.wrapT = this.tunnelTexture.wrapS = THREE.RepeatWrapping;
+            // this.tunnelTexture.repeat.set(1, 2);
+
+
+            this.clock = new THREE.Clock();
+
+            this.refs.visualContainer.appendChild(this.renderer.domElement);
+        }
+    }, {
+        key: 'componentDidMount',
+        value: function componentDidMount() {
             this.allowAnimationUpdate = true;
-            this.updateTimeLeft();
+            this.handleSize();
+            this.makeScene();
+            this.animationFrame();
+            window.addEventListener('resize', this.handleSize.bind(this));
         }
     }, {
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
+            window.removeEventListener('resize', this.handleSize.bind(this));
             this.allowAnimationUpdate = false;
+        }
+    }, {
+        key: 'animationFrame',
+        value: function animationFrame() {
+            if (!this.allowAnimationUpdate) {
+                return;
+            }
+
+            this.updateTimeLeft();
+            this.updateScene();
+
+            window.requestAnimationFrame(this.animationFrame.bind(this));
+        }
+    }, {
+        key: 'updateScene',
+        value: function updateScene() {
+            if (this.tunnelTexture) {
+                this.tunnelTexture.offset.y = this.clock.getElapsedTime() / 12;
+                this.renderer.render(this.scene, this.camera);
+            }
         }
     }, {
         key: 'arrival',
@@ -1195,7 +1291,9 @@ var Spoke = function (_React$Component) {
                     this.props.onGameStateChange(newGameState);
                 } else {
                     // try again (in case the JS is ahead of the server somehow)
-                    this.arrival();
+                    setTimeout(function () {
+                        this.arrival();
+                    }.bind(this), 1000);
                 }
             }.bind(this), function (e) {
                 // todo - better error handling!
@@ -1216,28 +1314,20 @@ var Spoke = function (_React$Component) {
     }, {
         key: 'updateTimeLeft',
         value: function updateTimeLeft() {
-            if (!this.allowAnimationUpdate) {
-                return;
-            }
-
             var now = new Date(),
                 calcTime = new Date(this.props.position.exitTime),
-                entryCalcTime = new Date(this.props.position.entryTime),
                 secondsDiff = (calcTime.getTime() - now.getTime()) / 1000,
                 roundedSecondsDiff = Math.floor(secondsDiff),
-                totalDiff = (calcTime.getTime() - entryCalcTime.getTime()) / 1000,
                 hours = Math.floor(roundedSecondsDiff / 3600),
                 hoursRem = roundedSecondsDiff - hours * 3600,
                 minutes = Math.floor(hoursRem / 60),
-                seconds = hoursRem - minutes * 60,
-                positionPercent = (totalDiff - secondsDiff) / totalDiff * 100,
-                positionStyle = { left: positionPercent + '%' };
+                seconds = hoursRem - minutes * 60;
 
             if (secondsDiff <= 0) {
                 this.setState({
-                    timeLeft: 0,
-                    positionStyle: { left: '100%' }
+                    timeLeft: 0
                 });
+                this.allowAnimationUpdate = false;
                 this.arrival();
                 return;
             }
@@ -1245,10 +1335,8 @@ var Spoke = function (_React$Component) {
             var timeLeft = hours + ':' + this.padNumber(minutes) + ':' + this.padNumber(seconds);
 
             this.setState({
-                timeLeft: timeLeft,
-                positionStyle: positionStyle
+                timeLeft: timeLeft
             });
-            window.requestAnimationFrame(this.updateTimeLeft.bind(this));
         }
     }, {
         key: 'render',
@@ -1265,135 +1353,50 @@ var Spoke = function (_React$Component) {
 
             return _react2.default.createElement(
                 'div',
-                { className: 'game__travelling grid' },
+                { className: 'game__travelling' },
+                _react2.default.createElement('div', { id: 'Game-Spoke-Visual', className: 'game__travelling-visual', ref: 'visualContainer' }),
                 _react2.default.createElement(
                     'div',
-                    { className: 'g' },
-                    _react2.default.createElement(
-                        'p',
-                        { className: 'a text--center' },
-                        'Travelling'
-                    )
-                ),
-                _react2.default.createElement(
-                    'div',
-                    { className: 'g' },
+                    { className: 'game__travelling-details' },
                     _react2.default.createElement(
                         'div',
-                        { className: 'grid grid--flush' },
+                        { className: 'travel-detail' },
                         _react2.default.createElement(
-                            'div',
-                            { className: 'g 1/6 g--align-center' },
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'text--right game__travelling-hubname' },
-                                _react2.default.createElement(
-                                    'h3',
-                                    null,
-                                    origin.name
-                                ),
-                                _react2.default.createElement(
-                                    'h4',
-                                    null,
-                                    origin.cluster.name
-                                )
-                            )
+                            'h2',
+                            null,
+                            'Travelling'
                         ),
                         _react2.default.createElement(
-                            'div',
-                            { className: 'g 1/6 g--align-center' },
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'game__travelling-hub' },
-                                _react2.default.createElement(
-                                    'svg',
-                                    {
-                                        viewBox: '0 0 104 120',
-                                        xmlns: 'http://www.w3.org/2000/svg' },
-                                    _react2.default.createElement('use', { xlinkHref: '#icon-hexagon' })
-                                )
-                            )
+                            'p',
+                            null,
+                            'Origin: ',
+                            origin.name,
+                            ' - ',
+                            origin.cluster.name
                         ),
                         _react2.default.createElement(
-                            'div',
-                            { className: 'g 1/3 g--align-center' },
-                            _react2.default.createElement(
-                                'p',
-                                { className: 'text--center' },
-                                _react2.default.createElement(
-                                    'span',
-                                    { className: 'b' },
-                                    'Arriving'
-                                ),
-                                _react2.default.createElement('br', null),
-                                _react2.default.createElement(
-                                    'span',
-                                    { className: 'c' },
-                                    arrivalTime
-                                )
-                            ),
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'game__travelling-map' },
-                                _react2.default.createElement('div', { className: 'game__travelling-line' }),
-                                _react2.default.createElement(
-                                    'div',
-                                    { className: 'game__travelling-position', style: this.state.positionStyle },
-                                    _react2.default.createElement('span', { className: 'location' })
-                                )
-                            ),
-                            _react2.default.createElement(
-                                'p',
-                                { className: 'text--center' },
-                                _react2.default.createElement(
-                                    'span',
-                                    { className: 'c' },
-                                    _react2.default.createElement(_Points2.default, {
-                                        value: 0,
-                                        time: this.props.position.entryTime,
-                                        rate: 1
-                                    })
-                                ),
-                                _react2.default.createElement('br', null),
-                                _react2.default.createElement(
-                                    'span',
-                                    { className: 'b' },
-                                    'Earned on this journey'
-                                )
-                            )
+                            'p',
+                            null,
+                            'Arrving: ',
+                            arrivalTime
                         ),
                         _react2.default.createElement(
-                            'div',
-                            { className: 'g 1/6 g--align-center' },
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'game__travelling-hub' },
-                                _react2.default.createElement(
-                                    'svg',
-                                    {
-                                        viewBox: '0 0 104 120',
-                                        xmlns: 'http://www.w3.org/2000/svg' },
-                                    _react2.default.createElement('use', { xlinkHref: '#icon-hexagon' })
-                                )
-                            )
+                            'p',
+                            null,
+                            'Points earned: ',
+                            _react2.default.createElement(_Points2.default, {
+                                value: 0,
+                                time: this.props.position.entryTime,
+                                rate: 1
+                            })
                         ),
                         _react2.default.createElement(
-                            'div',
-                            { className: 'g 1/6 g--align-center' },
-                            _react2.default.createElement(
-                                'div',
-                                { className: 'game__travelling-hubname' },
-                                _react2.default.createElement(
-                                    'h3',
-                                    null,
-                                    destination.name
-                                ),
-                                _react2.default.createElement(
-                                    'h4',
-                                    null,
-                                    destination.cluster.name
-                                )
-                            )
+                            'p',
+                            null,
+                            'Destination: ',
+                            destination.name,
+                            ' - ',
+                            destination.cluster.name
                         )
                     )
                 )
@@ -1727,10 +1730,10 @@ var Hub = function (_React$Component) {
 
                     var players = [];
 
-                    _this2.state.hubData.players.forEach(function (player) {
+                    _this2.state.hubData.players.forEach(function (player, i) {
                         players.push(_react2.default.createElement(
                             'li',
-                            { key: player.nickname, className: 'g 1/3' },
+                            { key: i, className: 'g 1/3' },
                             _react2.default.createElement(_Player2.default, { player: player })
                         ));
                     });
@@ -2012,11 +2015,11 @@ var Hub = function (_React$Component) {
         value: function render() {
             var players = [];
 
-            this.state.data.players.forEach(function (player) {
+            this.state.data.players.forEach(function (player, i) {
                 players.push(_react2.default.createElement(
                     'li',
                     { className: 'g 1/2' },
-                    _react2.default.createElement(_Player2.default, { key: player.nickname, player: player })
+                    _react2.default.createElement(_Player2.default, { key: i, player: player })
                 ));
             });
 
@@ -2390,5 +2393,10 @@ module.exports = window.ReactModal;
 "use strict";
 
 module.exports = window.React;
+
+},{}],"three":[function(require,module,exports){
+"use strict";
+
+module.exports = window.THREE;
 
 },{}]},{},[1]);

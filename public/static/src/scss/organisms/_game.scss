@@ -39,31 +39,18 @@
 }
 
 .game__travelling {
-    padding: $size-grid-unit;
-}
-
-.game__travelling-map {
-    height: 60px;
     position: relative;
-    background: #ffffff; /* Old browsers */
-    background: -webkit-linear-gradient(top, #000 0, #000 32px, transparent 32px);
-    background: linear-gradient(to bottom, #000 0, #000 32px, transparent 32px);
-    background-position: 0 12px;
-    background-repeat: no-repeat;
+    background: $color-white;
 }
-
-.game__travelling-position {
+.game__travelling-details {
     position: absolute;
-    top: 22px;
-    left: 0;
-    z-index: 2;
-    color: red;
-}
-
-.game__travelling-hub {
+    bottom: $size-grid-unit;
+    display: block;
     width: 100%;
 }
-
-.game__travelling-hubname {
-    padding: 0 $size-grid-unit;
+.game__travelling-visual {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: $color-white;
 }

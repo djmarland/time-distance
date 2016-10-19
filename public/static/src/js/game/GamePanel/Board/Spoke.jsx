@@ -1,4 +1,5 @@
 import React from 'react';
+// import THREE from 'three'; // todo - figure out why this isn't importing properly
 import FetchJson from '../../../utils/FetchJson';
 import Points from '../../Utils/Points';
 
@@ -8,17 +9,117 @@ export default class Spoke extends React.Component {
         this.allowAnimationUpdate = false;
         this.state = {
             timeLeft : null,
-            positionStyle : null
+            containerWidth: null,
+            containerHeight: null
         };
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.tunnelTexture = null;
+        this.clock = null;
     };
 
-    componentWillMount() {
+    handleSize() {
+        if (this.refs.visualContainer) {
+            let {clientHeight, clientWidth} = this.refs.visualContainer;
+            this.setState({
+                containerHeight: clientHeight,
+                containerWidth: clientWidth
+            });
+        }
+    }
+
+    makeScene() {
+        let {clientHeight, clientWidth} = this.refs.visualContainer; // todo - handle a resize
+
+        // scene
+        this.scene = new THREE.Scene();
+
+        // renderer
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setClearColor(0xffffff, 1);
+        this.renderer.setSize( clientWidth, clientHeight );
+
+        // camera
+        this.camera = new THREE.PerspectiveCamera( 75, clientWidth / clientHeight, 0.1, 1000 );
+        this.camera.position.z = -100;
+        this.camera.lookAt(this.scene.position);
+
+        let loader = new THREE.TextureLoader();
+        // load a resource
+        loader.load(
+            // resource URL
+            '/static/dist/img/spoke.png',
+            // Function when resource is loaded
+            function (texture) {
+                // do something with the texture
+                // var material = new THREE.MeshBasicMaterial( {
+                //     map: texture
+                // } );
+                this.tunnelTexture = texture;
+                this.tunnelTexture.wrapT = this.tunnelTexture.wrapS = THREE.RepeatWrapping;
+                this.tunnelTexture.repeat.set(1, 2);
+
+                // Tunnel Mesh
+                let color = 0x999999,
+                    tunnelMesh = new THREE.Mesh(
+                        new THREE.CylinderGeometry(4, 50, 1024, 6, 32, true),
+                        new THREE.MeshBasicMaterial({
+                            color: color,
+                            transparent: true,
+                            alphaMap: this.tunnelTexture,
+                            side: THREE.BackSide,
+                        })
+                    );
+                tunnelMesh.rotation.x = Math.PI / 2;
+                tunnelMesh.rotation.y = Math.PI / 2;
+                tunnelMesh.position.z = 0;
+                this.scene.add(tunnelMesh);
+            }.bind(this)
+        );
+
+        // tunnel
+        // THREE.ImageUtils.crossOrigin = '';
+        // this.tunnelTexture = THREE.ImageUtils.loadTexture('/static/dist/img/spoke.jpg');
+        // this.tunnelTexture.wrapT = this.tunnelTexture.wrapS = THREE.RepeatWrapping;
+        // this.tunnelTexture.repeat.set(1, 2);
+
+
+
+        this.clock = new THREE.Clock();
+
+        this.refs.visualContainer.appendChild( this.renderer.domElement );
+    }
+
+    componentDidMount(){
         this.allowAnimationUpdate = true;
-        this.updateTimeLeft();
+        this.handleSize();
+        this.makeScene();
+        this.animationFrame();
+        window.addEventListener('resize', this.handleSize.bind(this));
     }
 
     componentWillUnmount() {
+        window.removeEventListener('resize', this.handleSize.bind(this));
         this.allowAnimationUpdate = false;
+    }
+
+    animationFrame() {
+        if (!this.allowAnimationUpdate) {
+            return;
+        }
+
+        this.updateTimeLeft();
+        this.updateScene();
+
+        window.requestAnimationFrame(this.animationFrame.bind(this));
+    }
+
+    updateScene() {
+        if (this.tunnelTexture) {
+            this.tunnelTexture.offset.y = this.clock.getElapsedTime() / 12;
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     arrival() {
@@ -29,7 +130,9 @@ export default class Spoke extends React.Component {
                     this.props.onGameStateChange(newGameState);
                 } else {
                     // try again (in case the JS is ahead of the server somehow)
-                    this.arrival();
+                    setTimeout(function() {
+                        this.arrival();
+                    }.bind(this), 1000);
                 }
             }.bind(this),
             function(e) {
@@ -50,29 +153,20 @@ export default class Spoke extends React.Component {
     }
 
     updateTimeLeft() {
-        if (!this.allowAnimationUpdate) {
-            return;
-        }
-
         let now = new Date(),
             calcTime = new Date(this.props.position.exitTime),
-            entryCalcTime = new Date(this.props.position.entryTime),
             secondsDiff = (calcTime.getTime() - now.getTime()) / 1000,
             roundedSecondsDiff = Math.floor(secondsDiff),
-            totalDiff = (calcTime.getTime() - entryCalcTime.getTime()) / 1000,
             hours = Math.floor(roundedSecondsDiff / 3600),
             hoursRem = roundedSecondsDiff - (hours * 3600),
             minutes = Math.floor(hoursRem / 60),
-            seconds = hoursRem - (minutes * 60),
-            positionPercent = ((totalDiff - secondsDiff) / totalDiff) * 100,
-            positionStyle = {left:positionPercent + '%'};
-
+            seconds = hoursRem - (minutes * 60);
 
         if (secondsDiff <= 0) {
             this.setState({
-                timeLeft : 0,
-                positionStyle : {left:'100%'}
+                timeLeft : 0
             });
+            this.allowAnimationUpdate = false;
             this.arrival();
             return;
         }
@@ -80,10 +174,8 @@ export default class Spoke extends React.Component {
         let timeLeft = hours + ':' + this.padNumber(minutes) + ':' + this.padNumber(seconds);
 
         this.setState({
-            timeLeft : timeLeft,
-            positionStyle : positionStyle
+            timeLeft : timeLeft
         });
-        window.requestAnimationFrame(this.updateTimeLeft.bind(this));
     }
 
     render() {
@@ -98,66 +190,19 @@ export default class Spoke extends React.Component {
         }
 
         return (
-            <div className="game__travelling grid">
-                <div className="g">
-                    <p className="a text--center">Travelling</p>
-                </div>
-                <div className="g">
-                    <div className="grid grid--flush">
-                        <div className="g 1/6 g--align-center">
-                            <div className="text--right game__travelling-hubname">
-                                <h3>{origin.name}</h3>
-                                <h4>{origin.cluster.name}</h4>
-                            </div>
-                        </div>
-                        <div className="g 1/6 g--align-center">
-                            <div className="game__travelling-hub">
-                                <svg
-                                    viewBox="0 0 104 120"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <use xlinkHref="#icon-hexagon" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="g 1/3 g--align-center">
-                            <p className="text--center">
-                                <span className="b">Arriving</span>
-                                <br />
-                                <span className="c">{arrivalTime}</span>
-                            </p>
-                            <div className="game__travelling-map">
-                                <div className="game__travelling-line"></div>
-                                <div className="game__travelling-position" style={this.state.positionStyle}>
-                                    <span className="location"></span>
-                                </div>
-                            </div>
-                            <p className="text--center">
-                            <span className="c">
-                                <Points
-                                    value={0}
-                                    time={this.props.position.entryTime}
-                                    rate={1}
-                                />
-                            </span>
-                                <br />
-                                <span className="b">Earned on this journey</span>
-                            </p>
-                        </div>
-                        <div className="g 1/6 g--align-center">
-                            <div className="game__travelling-hub">
-                                <svg
-                                    viewBox="0 0 104 120"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <use xlinkHref="#icon-hexagon" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="g 1/6 g--align-center">
-                            <div className="game__travelling-hubname">
-                                <h3>{destination.name}</h3>
-                                <h4>{destination.cluster.name}</h4>
-                            </div>
-                        </div>
+            <div className="game__travelling">
+                <div id="Game-Spoke-Visual" className="game__travelling-visual" ref="visualContainer"></div>
+                <div className="game__travelling-details">
+                    <div className="travel-detail">
+                        <h2>Travelling</h2>
+                        <p>Origin: {origin.name} - {origin.cluster.name}</p>
+                        <p>Arrving: {arrivalTime}</p>
+                        <p>Points earned: <Points
+                            value={0}
+                            time={this.props.position.entryTime}
+                            rate={1}
+                            /></p>
+                        <p>Destination: {destination.name} - {destination.cluster.name}</p>
                     </div>
                 </div>
             </div>

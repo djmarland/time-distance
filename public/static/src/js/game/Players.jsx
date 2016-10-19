@@ -37,10 +37,10 @@ export default class Hub extends React.Component {
     render() {
         let players = [];
 
-        this.state.data.players.forEach(function (player) {
+        this.state.data.players.forEach(function (player, i) {
             players.push(
                 <li className="g 1/2">
-                    <Player key={player.nickname} player={player}/>
+                    <Player key={i} player={player}/>
                 </li>
             );
         });

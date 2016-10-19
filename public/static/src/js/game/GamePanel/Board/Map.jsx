@@ -19,11 +19,13 @@ export default class Map extends GamePanel {
     };
 
     handleSize() {
-        let { clientHeight, clientWidth } = this.refs.mapContainer;
-        this.setState({
-            containerHeight : clientHeight,
-            containerWidth : clientWidth
-        });
+        if (this.refs.mapContainer) {
+            let {clientHeight, clientWidth} = this.refs.mapContainer;
+            this.setState({
+                containerHeight: clientHeight,
+                containerWidth: clientWidth
+            });
+        }
     }
 
     componentDidMount(){

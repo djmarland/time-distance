@@ -47,16 +47,9 @@ export default class Board extends GamePanel {
         let gameState = this.state.gameState;
         if (!gameState.position.isInHub) {
             return (
-            <div className="grid grid--flat">
-                <div className="g 2/3@xl">
-                    <BoardMap gameState={this.state.gameState}/>
-                </div>
-                <div className="g 1/3@xl game__panel--location">
-                    <BoardSpoke
-                        onGameStateChange={this.updateGlobalGameState.bind(this)}
-                        position={gameState.position} />
-                </div>
-            </div>
+                <BoardSpoke
+                    onGameStateChange={this.updateGlobalGameState.bind(this)}
+                    position={gameState.position} />
             );
         }
 
@@ -66,9 +59,9 @@ export default class Board extends GamePanel {
         if (gameState.playersPresent && gameState.playersPresent.length > 0) {
             let players = [];
 
-            gameState.playersPresent.forEach(function (player) {
+            gameState.playersPresent.forEach(function (player, i) {
                 players.push(
-                    <li className="g 1/2" key={player.nickname}>
+                    <li className="g 1/2" key={i}>
                         <h5>{player.nickname}</h5>
                         <Points
                         value={player.points}
