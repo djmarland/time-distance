@@ -15,7 +15,6 @@ class Hub extends Entity implements \JsonSerializable
     private $isHaven;
     private $protectionScore;
     private $owner;
-    private $presentAbilityIds;
 
     public function __construct(
         int $id,
@@ -26,8 +25,7 @@ class Hub extends Entity implements \JsonSerializable
         bool $isHaven,
         int $protectionScore = null,
         Cluster $cluster = null,
-        Player $owner = null,
-        array $presentAbilityIds = []
+        Player $owner = null
     ) {
         parent::__construct($id);
 
@@ -39,7 +37,6 @@ class Hub extends Entity implements \JsonSerializable
         $this->isHaven = $isHaven;
         $this->protectionScore = $protectionScore;
         $this->owner = $owner;
-        $this->presentAbilityIds = $presentAbilityIds;
     }
 
     public function getName(): string
@@ -105,9 +102,14 @@ class Hub extends Entity implements \JsonSerializable
         return '/hubs/' . $this->getUrlKey();
     }
 
-    public function getPresentAbilityIds(): array
+    public function hasAbility(string $id): bool
     {
-        return $this->presentAbilityIds;
+        foreach ($this->presentAbilityIds as $abilityId) {
+            if ($id == $abilityId->unique) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function jsonSerialize()

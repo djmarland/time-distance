@@ -15,6 +15,7 @@ class NullPlayer extends Player
             0,
             0,
             new \DateTimeImmutable(),
+            [],
             new NullHub()
         );
     }

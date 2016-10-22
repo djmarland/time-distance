@@ -15,7 +15,8 @@ class AbilityMapper extends Mapper
             $item['type'],
             $item['description'],
             $item['spawnRate'],
-            $item['isMystery']
+            $item['isMystery'],
+            $item['uniqueKey'] ?? null
         );
         return $domain;
     }

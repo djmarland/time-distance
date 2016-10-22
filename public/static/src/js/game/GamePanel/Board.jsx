@@ -43,6 +43,25 @@ export default class Board extends GamePanel {
         );
     }
 
+    takeAbility(unique) {
+        // todo loading state (fancy animation?)
+        FetchJson.postUrl(
+            '/play/take-ability.json',
+            unique,
+            function(newGameState) {
+                this.updateGlobalGameState(newGameState);
+            }.bind(this),
+            function(e) {
+                // todo - better error handling! (especially if someone else has already taken it)
+                let message = 'Error (did you try to cheat)';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            }
+        );
+    }
+
     render() {
         let gameState = this.state.gameState;
         if (!gameState.position.isInHub) {
@@ -83,10 +102,15 @@ export default class Board extends GamePanel {
         let abilities = [];
         if (gameState.abilitiesPresent && gameState.abilitiesPresent.length > 0) {
             gameState.abilitiesPresent.forEach(function(ability, i) {
+                let onClick = function() {
+                    this.takeAbility(ability.uniqueKey);
+                }.bind(this);
                 abilities.push(
-                    <p key={i}>{ability.name}</p>
+                    <button key={i} onClick={onClick} className="ability">
+                        <span className="ability__name">{ability.name}</span>
+                    </button>
                 );
-            });
+            }.bind(this));
         }
 
         return (

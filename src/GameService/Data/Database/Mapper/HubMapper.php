@@ -25,13 +25,6 @@ class HubMapper extends Mapper
             $owner = new NullPlayer();
         }
 
-        $presentAbilities = [];
-        if (isset($item['status'])) {
-            if (isset($item['status']['abilities'])) {
-                $presentAbilities = $item['status']['abilities'];
-            }
-        }
-
         return new Hub(
             $item['id'],
             $item['name'],
@@ -41,8 +34,7 @@ class HubMapper extends Mapper
             $item['isHaven'],
             $item['protectionScore'],
             $cluster,
-            $owner,
-            $presentAbilities
+            $owner
         );
     }
 }

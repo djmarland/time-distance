@@ -2,6 +2,8 @@
 
 namespace GameService\Domain\Entity;
 
+use GameService\Domain\Exception\DataNotFetchedException;
+
 class Ability extends Entity implements \JsonSerializable
 {
     private $name;
@@ -10,6 +12,7 @@ class Ability extends Entity implements \JsonSerializable
     private $description;
     private $spawnRate;
     private $isMystery;
+    private $uniqueKey;
 
     public function __construct(
         int $id,
@@ -18,7 +21,8 @@ class Ability extends Entity implements \JsonSerializable
         string $type,
         string $description,
         float $spawnRate,
-        bool $isMystery
+        bool $isMystery,
+        string $uniqueKey = null
     ) {
         parent::__construct($id);
 
@@ -28,6 +32,7 @@ class Ability extends Entity implements \JsonSerializable
         $this->description = $description;
         $this->spawnRate = $spawnRate;
         $this->isMystery = $isMystery;
+        $this->uniqueKey = $uniqueKey;
     }
 
     public function getName(): string
@@ -55,6 +60,14 @@ class Ability extends Entity implements \JsonSerializable
         return $this->isMystery;
     }
 
+    public function getUniqueKey()
+    {
+        if (is_null($this->uniqueKey)) {
+            throw new DataNotFetchedException('Tried to find a uniqueKey out of context');
+        }
+        return $this->uniqueKey;
+    }
+
     /**
      * based on the spawn rate, return a boolean with those odds
      * can return different values on each call
@@ -75,10 +88,17 @@ class Ability extends Entity implements \JsonSerializable
 
     public function jsonSerialize()
     {
-        return [
+        $data = [
+            'id' => $this->id,
             'name' => $this->getName(),
             'description' => $this->getDescription(),
             'imageKey' => $this->getImageKey(),
         ];
+
+        if ($this->uniqueKey) {
+            $data['uniqueKey'] = $this->getUniqueKey();
+        }
+
+        return $data;
     }
 }

@@ -13,6 +13,7 @@ class Player extends Entity implements \JsonSerializable
     private $pointsRate;
     private $pointsCalculationTime;
     private $homeHub;
+    private $abilityCounts;
 
     public function __construct(
         int $id,
@@ -20,6 +21,7 @@ class Player extends Entity implements \JsonSerializable
         float $points,
         float $pointsRate,
         DateTimeImmutable $pointsCalculationTime,
+        array $abilityCounts,
         Hub $homeHub = null
     ) {
         parent::__construct($id);
@@ -28,6 +30,7 @@ class Player extends Entity implements \JsonSerializable
         $this->points = $points;
         $this->pointsRate = $pointsRate;
         $this->pointsCalculationTime = $pointsCalculationTime;
+        $this->abilityCounts = $abilityCounts;
         $this->homeHub = $homeHub;
     }
 
@@ -76,6 +79,16 @@ class Player extends Entity implements \JsonSerializable
     {
         $points = $this->getPointsEstimate();
         return number_format($points);
+    }
+
+    public function hasSeenAbility(Ability $ability): bool
+    {
+        return isset($this->abilityCounts[$ability->getId()]);
+    }
+
+    public function getAbilityCount(Ability $ability): int
+    {
+        return $this->abilityCounts[$ability->getId()] ?? 0;
     }
 
     public function getMapRotationSteps(): int

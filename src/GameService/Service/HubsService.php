@@ -80,12 +80,7 @@ class HubsService extends Service
         $this->entityManager->beginTransaction();
 
         // fetch the Hub entity
-        $qb = $this->getQueryBuilder(self::ENTITY);
-        $qb->select('Hub')
-            ->where('Hub.id = :id')
-            ->setParameter('id', $hub->getId());
-        /** @var HubEntity $hubEntity */
-        $hubEntity = $qb->getQuery()->getOneOrNullResult();
+        $hubEntity = $this->getHubEntity($hub);
         $playerEntity = $this->getPlayerEntity($player);
 
         // get all the players currently this hub
@@ -150,26 +145,46 @@ class HubsService extends Service
         }
     }
 
+    public function takeAbility(Hub $hub, Player $player, string $uniqueKey)
+    {
+        // start a database transaction
+        $this->entityManager->beginTransaction();
+
+        // fetch the Hub entity
+        $hubEntity = $this->getHubEntity($hub);
+        $playerEntity = $this->getPlayerEntity($player);
+
+        try {
+            $hubStatus = $hubEntity->getStatus();
+            $abilityId = $hubStatus->removeAbilityByKey($uniqueKey);
+            $hubEntity->setStatus($hubStatus);
+
+            $playerStatus = $playerEntity->getStatus();
+            $playerStatus->addAbility($abilityId);
+            $playerEntity->setStatus($playerStatus);
+
+            $this->entityManager->persist($hubEntity);
+            $this->entityManager->persist($playerEntity);
+
+            // complete the transaction
+            $this->entityManager->flush();
+            $this->commit();
+        } catch (Exception $e) {
+            // rollback and rethrow
+            $this->rollback();
+            throw $e;
+        }
+    }
+
     public function addAbilities(Hub $hub, array $abilitiesToAdd)
     {
-        // fetch the Hub entity (todo - move to repository)
-        $qb = $this->getQueryBuilder(self::ENTITY);
-        $qb->select('Hub')
-            ->where('Hub.id = :id')
-            ->setParameter('id', $hub->getId());
-        /** @var HubEntity $hubEntity */
-        $hubEntity = $qb->getQuery()->getOneOrNullResult();
+        // fetch the Hub entity
+        $hubEntity = $this->getHubEntity($hub);
 
         $currentStatus = $hubEntity->getStatus();
-        // todo - is there a nice helper that can be built for handling status?
-        if (!isset($currentStatus['abilities'])) {
-            $currentStatus['abilities'] = [];
+        foreach($abilitiesToAdd as $ability) {
+            $currentStatus->createAbility($ability->getId());
         }
-        $ids = array_map(function($ability) {
-            return $ability->getId();
-        }, $abilitiesToAdd);
-
-        $currentStatus['abilities'] = array_merge($currentStatus['abilities'], $ids);
         $hubEntity->setStatus($currentStatus);
 
         $this->entityManager->persist($hubEntity);
@@ -178,8 +193,19 @@ class HubsService extends Service
 
     private function getPlayerEntity(Player $player): PlayerEntity
     {
-        // todo - move these to EntityRepos
+        // todo - move these to EntityRepos (findbyId)
         /** @var PlayerEntity $playerEntity */
         return $this->getEntity('Player')->findByDbId($player->getId());
+    }
+
+    private function getHubEntity(Hub $hub): HubEntity
+    {
+        // todo - move these to EntityRepos (findbyId)
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('Hub')
+            ->where('Hub.id = :id')
+            ->setParameter('id', $hub->getId());
+        /** @var HubEntity $hubEntity */
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }

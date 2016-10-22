@@ -50,3 +50,7 @@ action_make_move:
 action_take_hub:
   path:     /play/take-hub.json
   defaults: { _controller: AppBundle:Game:takeHub }
+
+action_take_ability:
+  path:     /play/take-ability.json
+  defaults: { _controller: AppBundle:Game:takeAbility }

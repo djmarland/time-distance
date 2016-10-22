@@ -2,6 +2,7 @@
 namespace GameService\Data\Database\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use GameService\Data\Database\Entity\Status\HubStatus;
 
 /**
  * @ORM\Entity
@@ -28,9 +29,6 @@ class Hub extends Entity
     /** @ORM\Column(type="integer", nullable=true) */
     private $protectionScore;
 
-    /** @ORM\Column(type="array", nullable=true) */
-    private $status;
-
     /**
      * @ORM\ManyToOne(targetEntity="Cluster")
      * @ORM\JoinColumn(onDelete="CASCADE")
@@ -42,6 +40,11 @@ class Hub extends Entity
      * @ORM\JoinColumn(onDelete="SET NULL", nullable=true)
      */
     private $owner;
+
+    /** @ORM\Column(type="text", nullable=true) */
+    private $status;
+
+    private $_statusObject;
 
     public function __construct(
         string $name,
@@ -114,11 +117,15 @@ class Hub extends Entity
 
     public function getStatus()
     {
-        return $this->status;
+        if (!$this->_statusObject) {
+            $this->_statusObject = new HubStatus($this->status);
+        }
+        return $this->_statusObject;
     }
 
-    public function setStatus(array $status = null)
+    public function setStatus(HubStatus $status = null)
     {
-        $this->status = $status;
+        $this->_statusObject = $status;
+        $this->status = (string) $this->_statusObject;
     }
 }

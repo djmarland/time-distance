@@ -572,6 +572,21 @@ var Board = function (_GamePanel) {
             });
         }
     }, {
+        key: 'takeAbility',
+        value: function takeAbility(unique) {
+            // todo loading state (fancy animation?)
+            _FetchJson2.default.postUrl('/play/take-ability.json', unique, function (newGameState) {
+                this.updateGlobalGameState(newGameState);
+            }.bind(this), function (e) {
+                // todo - better error handling! (especially if someone else has already taken it)
+                var message = 'Error (did you try to cheat)';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            });
+        }
+    }, {
         key: 'render',
         value: function render() {
             var gameState = this.state.gameState;
@@ -625,12 +640,19 @@ var Board = function (_GamePanel) {
             var abilities = [];
             if (gameState.abilitiesPresent && gameState.abilitiesPresent.length > 0) {
                 gameState.abilitiesPresent.forEach(function (ability, i) {
+                    var onClick = function () {
+                        this.takeAbility(ability.uniqueKey);
+                    }.bind(this);
                     abilities.push(React.createElement(
-                        'p',
-                        { key: i },
-                        ability.name
+                        'button',
+                        { key: i, onClick: onClick, className: 'ability' },
+                        React.createElement(
+                            'span',
+                            { className: 'ability__name' },
+                            ability.name
+                        )
                     ));
-                });
+                }.bind(this));
             }
 
             return React.createElement(

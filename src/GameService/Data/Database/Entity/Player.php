@@ -3,6 +3,7 @@ namespace GameService\Data\Database\Entity;
 
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
+use GameService\Data\Database\Entity\Status\PlayerStatus;
 
 /**
  * @ORM\Entity
@@ -31,6 +32,11 @@ class Player extends Entity
     private $homeHub;
 
 //    private $clan;
+
+    /** @ORM\Column(type="text", nullable=true) */
+    private $status;
+
+    private $_statusObject;
 
     public function __construct(
         string $nickname,
@@ -100,5 +106,19 @@ class Player extends Entity
     public function addPoints(int $points)
     {
         $this->points = $this->points + $points;
+    }
+
+    public function getStatus()
+    {
+        if (!$this->_statusObject) {
+            $this->_statusObject = new PlayerStatus($this->status);
+        }
+        return $this->_statusObject;
+    }
+
+    public function setStatus(PlayerStatus $status = null)
+    {
+        $this->_statusObject = $status;
+        $this->status = (string) $this->_statusObject;
     }
 }

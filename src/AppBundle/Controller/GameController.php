@@ -156,6 +156,37 @@ class GameController extends Controller
         return $this->renderStatus();
     }
 
+    public function takeAbilityAction()
+    {
+        $player = $this->getPlayer();
+        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
+
+        // check that we are in a hub
+        if (!$position->isInHub()) {
+            throw new HttpException(400, 'Not in a valid state to perform move');
+        }
+
+        $hub = $position->getLocation();
+        $uniqueAbility = $this->request->getContent();
+
+        // check that this hub actually has this ability
+        $abilitiesPresent = $this->get('app.services.abilities')->findPresentInHub($hub);
+        $found = false;
+        foreach($abilitiesPresent as $a) {
+            if ($a->getUniqueKey() == $uniqueAbility) {
+                $found = true;
+            }
+        }
+        if (!$found) {
+            throw new HttpException(400, 'Invalid ability, or it was stolen');
+        }
+
+        // take the ability
+        $this->get('app.services.hubs')->takeAbility($position->getLocation(), $player, $uniqueAbility);
+
+        return $this->renderStatus();
+    }
+
     public function statusAction()
     {
         return $this->renderStatus();
@@ -224,17 +255,12 @@ class GameController extends Controller
         $playersPresent = [];
         $abilitiesPresent = [];
         if ($position->isInHub()) {
+            $hub = $position->getLocation();
             $playersPresent = $this->get('app.services.players')
-                ->findInHub($position->getLocation());
+                ->findInHub($hub);
 
-            // find abilities in the hub
-            foreach($position->getLocation()->getPresentAbilityIds() as $id) {
-                foreach ($abilities as $ability) {
-                    if ($ability->getId() == $id) {
-                        $abilitiesPresent[] = $ability;
-                    }
-                }
-            }
+            $abilitiesPresent = $this->get('app.services.abilities')
+                ->findPresentInHub($hub);
         }
 
         $this->toView('playersPresent', $playersPresent, true);
@@ -258,7 +284,7 @@ class GameController extends Controller
                 $currentGroupKey = $typeKey;
             }
             if ($ability->isMystery()
-                // todo (&& player has not already seen it)
+                && !$player->hasSeenAbility($ability)
             ) {
                 $currentGroup['items'][] = [
                     'mystery' => true
@@ -267,7 +293,7 @@ class GameController extends Controller
                 $currentGroup['items'][] = [
                     'mystery' => false,
                     'ability' => $ability,
-                    'count' => mt_rand(0,4), // todo - actual count from player
+                    'count' => $player->getAbilityCount($ability)
                 ];
             }
         }
