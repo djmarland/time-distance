@@ -1,7 +1,13 @@
 {% extends 'AppBundle::base.html.twig' %}
 
 {% block body %}
-    <div id="app-game">
-        LOADING
+    <div id="app-loading" class="loading-page">
+        <div class="loading-page__spinner">
+            {% include '@partials/_loading.html.twig' %}
+        </div>
+        <span class="loading-page__text">Loading game</span>
     </div>
 {% endblock %}
+
+{% block appId %}game{% endblock %}
+{% block appInitial %}{{ gameState|json_encode }}{% endblock %}

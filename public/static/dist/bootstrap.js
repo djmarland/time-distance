@@ -9,10 +9,6 @@ var _reactDom = require('react-dom');
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _FetchJson = require('./utils/FetchJson');
-
-var _FetchJson2 = _interopRequireDefault(_FetchJson);
-
 var _Game = require('./game/Game');
 
 var _Game2 = _interopRequireDefault(_Game);
@@ -29,7 +25,7 @@ var _Players = require('./game/Players');
 
 var _Players2 = _interopRequireDefault(_Players);
 
-var _Header = require('./game/Header');
+var _Header = require('./game/GamePanel/Header');
 
 var _Header2 = _interopRequireDefault(_Header);
 
@@ -38,91 +34,60 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 (function () {
     "use strict";
 
-    var appHeader = document.getElementById('app-header'),
-        appGame = document.getElementById('app-game'),
-        appHub = document.getElementById('app-hub'),
-        appPlayer = document.getElementById('app-player'),
-        appPlayersList = document.getElementById('app-players-list'),
+    var appContainer = document.getElementById('app-container'),
+        headerContainer = document.getElementById('header-container'),
+        loadingContainer = document.getElementById('app-loading'),
         updateInterval = 20 * 1000;
 
     function unsupported() {
-        if (appGame) {
-            appGame.innerHTML = '<p>Your browser does not support this game</p>';
+        if (loadingContainer) {
+            loadingContainer.innerHTML = '<p>Sorry, your browser does not support playing this game</p>';
         }
     }
 
     function init() {
+        var app = appContainer.dataset.app ? appContainer : headerContainer,
+            appType = app.dataset.app,
+            initial = app.dataset.initial,
+            initialData = null,
+            appComponent = null;
 
-        // todo - get the header to update dynamically (when hearing an event)?
-
-        if (appHeader) {
-            // todo - use initial state if present?
-            _reactDom2.default.render(_react2.default.createElement(_Header2.default, {
-                updateInterval: updateInterval
-            }), appHeader);
+        if (initial) {
+            initialData = JSON.parse(initial);
         }
 
-        if (appGame) {
-            // todo - use initial state for the game to be faster
-            _FetchJson2.default.getUrl('/play/status.json', function (gameState) {
-
-                if (appGame) {
-                    _reactDom2.default.render(_react2.default.createElement(_Game2.default, { gameState: gameState }), appGame);
-                }
-            }, function (e) {
-                var message = 'Error getting status';
-                if (e) {
-                    message += ' - ' + e.message;
-                }
-                alert(message);
-            });
-
-            // if ('serviceWorker' in navigator ) {
-            //     navigator.serviceWorker.register('/sw.js', {scope:'/'});
-            // }
+        switch (appType) {
+            case 'header':
+                appComponent = _react2.default.createElement(_Header2.default, { updateInterval: updateInterval, gameState: initialData });
+                break;
+            case 'game':
+                appComponent = _react2.default.createElement(_Game2.default, { updateInterval: updateInterval, initialData: initialData });
+                break;
+            case 'hub':
+                appComponent = _react2.default.createElement(_Hub2.default, { updateInterval: updateInterval, initialData: initialData });
+                break;
+            case 'player':
+                appComponent = _react2.default.createElement(_Player2.default, { updateInterval: updateInterval, initialData: initialData });
+                break;
+            case 'players-list':
+                appComponent = _react2.default.createElement(_Players2.default, { updateInterval: updateInterval, initialData: initialData });
+                break;
+            default:
         }
 
-        if (appHub) {
-            var hubData = appHub.dataset.initial;
-
-            if (hubData) {
-                hubData = JSON.parse(hubData);
-            } else {
-                hubData = [];
-            }
-            _reactDom2.default.render(_react2.default.createElement(_Hub2.default, {
-                hubData: hubData,
-                updateInterval: updateInterval
-            }), appHub);
+        if (appComponent) {
+            _reactDom2.default.render(appComponent, app);
         }
-
-        if (appPlayer) {
-            var playerData = JSON.parse(appPlayer.dataset.initial);
-            _reactDom2.default.render(_react2.default.createElement(_Player2.default, {
-                playerData: playerData,
-                updateInterval: updateInterval
-            }), appPlayer);
-        }
-
-        if (appPlayersList) {
-            var initialData = JSON.parse(appPlayersList.dataset.initial);
-            _reactDom2.default.render(_react2.default.createElement(_Players2.default, {
-                initialData: initialData,
-                updateInterval: updateInterval
-            }), appPlayersList);
-        }
-
-        // todo - reuse code in this bootstrap file
     }
 
-    if (document.getElementsByClassName && document.addEventListener) {
+    if (JSON && document.getElementsByClassName && document.addEventListener) {
         init();
     } else {
         unsupported();
     }
 })();
 
-},{"./game/Game":2,"./game/Header":9,"./game/Hub":10,"./game/Player":11,"./game/Players":12,"./utils/FetchJson":17,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
+},{"./game/Game":2,"./game/GamePanel/Header":8,"./game/Hub":9,"./game/Player":10,"./game/Players":11,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -135,13 +100,13 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _Header = require('./GamePanel/Header');
+
+var _Header2 = _interopRequireDefault(_Header);
+
 var _Board = require('./GamePanel/Board');
 
 var _Board2 = _interopRequireDefault(_Board);
-
-var _Player = require('./GamePanel/Player');
-
-var _Player2 = _interopRequireDefault(_Player);
 
 var _Abilities = require('./GamePanel/Abilities');
 
@@ -164,14 +129,24 @@ var Game = function (_React$Component) {
             return 'board';
         }
     }, {
-        key: 'PANEL_PLAYER',
+        key: 'PANEL_HUBS',
         get: function get() {
-            return 'player';
+            return 'hubs';
         }
     }, {
         key: 'PANEL_ABILITIES',
         get: function get() {
             return 'abilities';
+        }
+    }, {
+        key: 'PANEL_CLANS',
+        get: function get() {
+            return 'clans';
+        }
+    }, {
+        key: 'PANEL_STATS',
+        get: function get() {
+            return 'stats';
         }
     }, {
         key: 'PANEL_SETTINGS',
@@ -186,7 +161,7 @@ var Game = function (_React$Component) {
         var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
 
         _this.state = {
-            activePanel: 'board',
+            activePanel: Game.PANEL_BOARD,
             gameState: null
         };
         return _this;
@@ -195,7 +170,7 @@ var Game = function (_React$Component) {
     _createClass(Game, [{
         key: 'componentWillMount',
         value: function componentWillMount() {
-            this.updateGameState(this.props.gameState);
+            this.updateGameState(this.props.initialData);
         }
     }, {
         key: 'updateGameState',
@@ -205,43 +180,106 @@ var Game = function (_React$Component) {
             });
         }
     }, {
+        key: 'changeTab',
+        value: function changeTab(newTab) {
+            if (newTab == this.state.activePanel) {
+                return; // no change to be made
+            }
+            this.setState({
+                activePanel: newTab
+            });
+        }
+    }, {
         key: 'render',
         value: function render() {
-            var panels = [];
-
-            if (this.state.activePanel == Game.PANEL_SETTINGS) {
-                panels.push(_react2.default.createElement(
-                    'div',
-                    { key: 'panel-settings' },
-                    'SETTINGS'
-                ));
-            } else {
-                var activeClass = "game__panel--active",
-                    boardClass = this.state.activePanel == Game.PANEL_BOARD ? activeClass : null,
-                    playerClass = this.state.activePanel == Game.PANEL_PLAYER ? activeClass : null,
-                    abilitiesClass = this.state.activePanel == Game.PANEL_ABILITIES ? activeClass : null;
-
-                panels.push(_react2.default.createElement(
-                    'div',
-                    { key: 'panel-board', className: "game__panel game__panel--board g " + boardClass },
-                    _react2.default.createElement(_Board2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) })
-                ));
-                panels.push(_react2.default.createElement(
-                    'div',
-                    { key: 'panel-player', className: "game__panel game__panel--player g 1/2@xl " + playerClass },
-                    _react2.default.createElement(_Player2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) })
-                ));
-                panels.push(_react2.default.createElement(
-                    'div',
-                    { key: 'panel-abilities', className: "game__panel game__panel--abilities g 1/2@xl " + abilitiesClass },
-                    _react2.default.createElement(_Abilities2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) })
-                ));
+            var visiblePanel = null;
+            switch (this.state.activePanel) {
+                case Game.PANEL_HUBS:
+                    visiblePanel = 'HUBS';
+                    break;
+                case Game.PANEL_ABILITIES:
+                    visiblePanel = _react2.default.createElement(_Abilities2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) });
+                    break;
+                case Game.PANEL_CLANS:
+                    visiblePanel = 'CLANS COMING SOON';
+                    break;
+                case Game.PANEL_STATS:
+                    visiblePanel = 'STATS';
+                    break;
+                case Game.PANEL_SETTINGS:
+                    visiblePanel = 'SETTINGS';
+                    break;
+                default:
+                case Game.PANEL_BOARD:
+                    visiblePanel = _react2.default.createElement(_Board2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) });
+                    break;
             }
+
+            {/*let panels = [];*/}
+
+            {/*if (this.state.activePanel == Game.PANEL_SETTINGS) {*/}
+            {/*panels.push(<div key="panel-settings">SETTINGS</div>);*/}
+            {/*} else {*/}
+            {/*let activeClass = "game__panel--active",*/}
+            {/*boardClass = this.state.activePanel == Game.PANEL_BOARD ? activeClass : null,*/}
+            {/*playerClass = this.state.activePanel == Game.PANEL_PLAYER ? activeClass : null,*/}
+            {/*abilitiesClass = this.state.activePanel == Game.PANEL_ABILITIES ? activeClass : null;*/}
+
+            {/*panels.push(*/}
+            {/*<div key="panel-board" className={"game__panel game__panel--board g " + boardClass}>*/}
+            {/*<Board gameState={this.state.gameState} onGameUpdate={this.updateGameState.bind(this)} />*/}
+            {/*</div>*/}
+            {} /*);*/
+            //     panels.push(
+            //         <div key="panel-player" className={"game__panel game__panel--player g 1/2@xl " + playerClass}>
+            //             <Player gameState={this.state.gameState} onGameUpdate={this.updateGameState.bind(this)} />
+            //         </div>
+            //     );
+            //     panels.push(
+            //         <div key="panel-abilities" className={"game__panel game__panel--abilities g 1/2@xl " + abilitiesClass}>
+            //             <Abilities gameState={this.state.gameState} onGameUpdate={this.updateGameState.bind(this)} />
+            //         </div>
+            //     );
+            // }
+
+            var tabData = [{ key: Game.PANEL_BOARD, title: 'Location' }, { key: Game.PANEL_HUBS, title: 'Hubs' }, { key: Game.PANEL_ABILITIES, title: 'Abilities' }, { key: Game.PANEL_CLANS, title: 'Clans' }, { key: Game.PANEL_STATS, title: 'Stats' }],
+                tabs = [];
+            tabData.forEach(function (tab, i) {
+                var isActive = tab.key == this.state.activePanel;
+                tabs.push(_react2.default.createElement(GameTab, {
+                    key: i,
+                    tabKey: tab.key,
+                    isActive: isActive,
+                    title: tab.title,
+                    onClick: this.changeTab.bind(this) }));
+            }.bind(this));
 
             return _react2.default.createElement(
                 'div',
-                { className: 'game grid grid--flush' },
-                panels
+                { className: 'game' },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'game__header' },
+                    _react2.default.createElement(_Header2.default, { gameState: this.state.gameState })
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'game__main' },
+                    visiblePanel
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'game__tabs' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'layout-limit' },
+                        _react2.default.createElement(
+                            'ul',
+                            { className: 'game__tabs-list' },
+                            tabs
+                        )
+                    )
+                )
             );
         }
     }]);
@@ -251,7 +289,48 @@ var Game = function (_React$Component) {
 
 exports.default = Game;
 
-},{"./GamePanel/Abilities":3,"./GamePanel/Board":4,"./GamePanel/Player":8,"react":"react"}],3:[function(require,module,exports){
+var GameTab = function (_React$Component2) {
+    _inherits(GameTab, _React$Component2);
+
+    function GameTab() {
+        _classCallCheck(this, GameTab);
+
+        return _possibleConstructorReturn(this, (GameTab.__proto__ || Object.getPrototypeOf(GameTab)).apply(this, arguments));
+    }
+
+    _createClass(GameTab, [{
+        key: 'changeTab',
+        value: function changeTab() {
+            this.props.onClick(this.props.tabKey);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var itemClass = 'game__tab ';
+            if (this.props.isActive) {
+                itemClass += 'game__tab--active';
+            }
+            var textClass = 'game__tabtext game__tabtext--' + this.props.tabKey;
+            return _react2.default.createElement(
+                'li',
+                { className: itemClass },
+                _react2.default.createElement(
+                    'button',
+                    { className: 'game__tab-button', onClick: this.changeTab.bind(this), disabled: this.props.isActive },
+                    _react2.default.createElement(
+                        'span',
+                        { className: textClass },
+                        this.props.title
+                    )
+                )
+            );
+        }
+    }]);
+
+    return GameTab;
+}(_react2.default.Component);
+
+},{"./GamePanel/Abilities":3,"./GamePanel/Board":4,"./GamePanel/Header":8,"react":"react"}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -304,18 +383,9 @@ var Abilities = function (_GamePanel) {
             });
 
             return _react2.default.createElement(
-                'div',
-                null,
-                _react2.default.createElement(
-                    'h2',
-                    null,
-                    'Abilities'
-                ),
-                _react2.default.createElement(
-                    'ul',
-                    { className: 'abilities-list' },
-                    groups
-                )
+                'ul',
+                { className: 'abilities-list' },
+                groups
             );
         }
     }]);
@@ -353,12 +423,20 @@ var AbilitiesGroup = function (_React$Component) {
                 _react2.default.createElement(
                     'h3',
                     { className: 'abilities-list__group-heading e' },
-                    this.props.group.title
+                    _react2.default.createElement(
+                        'span',
+                        { className: 'layout-limit' },
+                        this.props.group.title
+                    )
                 ),
                 _react2.default.createElement(
-                    'ul',
-                    { className: 'abilities-list__group-items grid' },
-                    items
+                    'div',
+                    { className: 'layout-limit' },
+                    _react2.default.createElement(
+                        'ul',
+                        { className: 'abilities-list__group-items grid' },
+                        items
+                    )
                 )
             );
         }
@@ -495,7 +573,7 @@ var AbilitiesItem = function (_React$Component2) {
     return AbilitiesItem;
 }(_react2.default.Component);
 
-},{"../../utils/Lightbox":18,"./GamePanel":7,"react":"react"}],4:[function(require,module,exports){
+},{"../../utils/Lightbox":17,"./GamePanel":7,"react":"react"}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -538,10 +616,20 @@ var Board = function (_GamePanel) {
     function Board() {
         _classCallCheck(this, Board);
 
-        return _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this));
+
+        _this.state.viewMap = false;
+        return _this;
     }
 
     _createClass(Board, [{
+        key: 'switchView',
+        value: function switchView() {
+            this.setState({
+                viewMap: !this.state.viewMap
+            });
+        }
+    }, {
         key: 'changeHub',
         value: function changeHub(bearing) {
             // todo loading state (fancy animation?)
@@ -590,13 +678,50 @@ var Board = function (_GamePanel) {
         key: 'render',
         value: function render() {
             var gameState = this.state.gameState;
-            if (!gameState.position.isInHub) {
-                return React.createElement(_Spoke2.default, {
-                    onGameStateChange: this.updateGlobalGameState.bind(this),
-                    position: gameState.position });
+
+            if (this.state.viewMap) {
+                return React.createElement(
+                    'div',
+                    { className: 'board' },
+                    React.createElement(_Map2.default, { onChangeHub: this.changeHub.bind(this), gameState: this.state.gameState }),
+                    React.createElement(
+                        'button',
+                        { className: 'board__view-switch board__view-switch--location',
+                            onClick: this.switchView.bind(this) },
+                        React.createElement(
+                            'span',
+                            { className: 'board__view-switch-text' },
+                            'Location'
+                        )
+                    )
+                );
             }
 
-            var location = React.createElement(BoardLocationHub, { onTakeHub: this.takeHub.bind(this), gameState: gameState });
+            var viewSwitcher = React.createElement(
+                'button',
+                { className: 'board__view-switch board__view-switch--map',
+                    onClick: this.switchView.bind(this) },
+                React.createElement(
+                    'span',
+                    { className: 'board__view-switch-text' },
+                    'Map'
+                )
+            );
+
+            if (!gameState.position.isInHub) {
+                return React.createElement(
+                    'div',
+                    { className: 'board' },
+                    React.createElement(_Spoke2.default, {
+                        onGameStateChange: this.updateGlobalGameState.bind(this),
+                        position: gameState.position }),
+                    viewSwitcher
+                );
+            }
+
+            var position = gameState.position;
+
+            // {/*let location = (<BoardLocationHub onTakeHub={this.takeHub.bind(this)} gameState={gameState} />);*/}
 
             var playersPresent = null;
             if (gameState.playersPresent && gameState.playersPresent.length > 0) {
@@ -645,7 +770,7 @@ var Board = function (_GamePanel) {
                     }.bind(this);
                     abilities.push(React.createElement(
                         'button',
-                        { key: i, onClick: onClick, className: 'ability' },
+                        { key: i, onClick: onClick, className: 'ability ability--hub' },
                         React.createElement(
                             'span',
                             { className: 'ability__name' },
@@ -657,28 +782,63 @@ var Board = function (_GamePanel) {
 
             return React.createElement(
                 'div',
-                { className: 'grid grid--flat' },
+                { className: 'board' },
                 React.createElement(
                     'div',
-                    { className: 'g 2/3@xl' },
-                    React.createElement(_Map2.default, { onChangeHub: this.changeHub.bind(this), gameState: this.state.gameState })
-                ),
-                React.createElement(
-                    'div',
-                    { className: 'g 1/3@xl game__panel--location' },
-                    location,
-                    playersPresent,
+                    { className: 'board__hub-intro' },
                     React.createElement(
                         'div',
-                        null,
+                        { className: 'layout-limit' },
+                        React.createElement(
+                            'div',
+                            { className: 'board__hub-flag' },
+                            'FLAG'
+                        ),
+                        React.createElement(
+                            'h1',
+                            null,
+                            position.location.name
+                        ),
                         React.createElement(
                             'h2',
                             null,
-                            'Abilities here'
-                        ),
-                        abilities
+                            position.location.cluster.name
+                        )
                     )
-                )
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'layout-limit' },
+                    React.createElement(
+                        'div',
+                        { className: 'grid grid--flat' },
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/2@xl' },
+                            'BIG HEXAGON'
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/2@xl' },
+                            playersPresent,
+                            React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                    'h2',
+                                    null,
+                                    'Abilities here'
+                                ),
+                                React.createElement(
+                                    'div',
+                                    null,
+                                    abilities
+                                )
+                            )
+                        )
+                    )
+                ),
+                viewSwitcher
             );
         }
     }]);
@@ -781,60 +941,7 @@ var BoardLocationHub = function (_React$Component) {
     return BoardLocationHub;
 }(React.Component);
 
-/*
- class BoardHubOption extends React.Component {
- goToHub() {
- this.props.onChangeHub(this.props.direction.bearing);
- }
-
- displayDistance(distance) {
- if (distance === 0) {
- let secs = Math.floor(this.props.distanceMultiplier/60);
- return Math.max(secs, 1) + ' seconds';
- }
- let totalSeconds = distance * this.props.distanceMultiplier,
- hours = (totalSeconds / 3600);
-
- if (hours == 1) {
- return hours + ' hour';
- } else if (hours > 1) {
- return hours + ' hours';
- }
- return totalSeconds/60 + ' minutes';
- }
-
- render() {
- let directionEl = null,
- direction = this.props.direction;
-
- if (direction) {
- let crossingVoid = null;
- if (direction.crossesTheVoid) {
- crossingVoid = (<p>CROSSING THE VOID</p>);
- }
- directionEl = (
- <div>
- <h4>{direction.hub.name} - {direction.hub.cluster.name}</h4>
- <p>
- Distance: {this.displayDistance(direction.distance)}
- <button onClick={this.goToHub.bind(this)}>Go there</button>
- </p>
- {crossingVoid}
- </div>
- );
- }
-
- return (
- <div className="g 1/2">
- <h3>{this.props.directionKey}</h3>
- {directionEl}
- </div>
- );
- }
- }
- */
-
-},{"../../utils/FetchJson":17,"../Utils/Points":14,"./Board/Map":5,"./Board/Spoke":6,"./GamePanel":7}],5:[function(require,module,exports){
+},{"../../utils/FetchJson":16,"../Utils/Points":13,"./Board/Map":5,"./Board/Spoke":6,"./GamePanel":7}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1431,7 +1538,7 @@ var Spoke = function (_React$Component) {
 
 exports.default = Spoke;
 
-},{"../../../utils/FetchJson":17,"../../Utils/Points":14,"react":"react"}],7:[function(require,module,exports){
+},{"../../../utils/FetchJson":16,"../../Utils/Points":13,"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1505,11 +1612,21 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
 var _GamePanel2 = require('./GamePanel');
 
 var _GamePanel3 = _interopRequireDefault(_GamePanel2);
 
-var _Points = require('../Utils/Points');
+var _FetchJson = require('../../utils/FetchJson');
+
+var _FetchJson2 = _interopRequireDefault(_FetchJson);
+
+var _Points = require('../utils/Points');
 
 var _Points2 = _interopRequireDefault(_Points);
 
@@ -1527,75 +1644,8 @@ var Player = function (_GamePanel) {
     function Player() {
         _classCallCheck(this, Player);
 
-        return _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).apply(this, arguments));
-    }
-
-    _createClass(Player, [{
-        key: 'render',
-        value: function render() {
-            var player = this.state.gameState.player;
-
-            return React.createElement(
-                'div',
-                null,
-                React.createElement(
-                    'h1',
-                    null,
-                    player.nickname
-                ),
-                React.createElement(_Points2.default, {
-                    timeNow: this.state.gameState.currentTime,
-                    value: player.points,
-                    time: player.pointsCalculationTime,
-                    rate: player.pointsRate
-                })
-            );
-        }
-    }]);
-
-    return Player;
-}(_GamePanel3.default);
-
-exports.default = Player;
-
-},{"../Utils/Points":14,"./GamePanel":7}],9:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _FetchJson = require('../utils/FetchJson');
-
-var _FetchJson2 = _interopRequireDefault(_FetchJson);
-
-var _Points = require('./utils/Points');
-
-var _Points2 = _interopRequireDefault(_Points);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Player = function (_React$Component) {
-    _inherits(Player, _React$Component);
-
-    function Player() {
-        _classCallCheck(this, Player);
-
         var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this));
 
-        _this.refetchInterval = null;
         _this.state = {
             gameState: null
         };
@@ -1605,7 +1655,10 @@ var Player = function (_React$Component) {
     _createClass(Player, [{
         key: 'componentWillMount',
         value: function componentWillMount() {
-            this.fetchLatestData();
+            _get(Player.prototype.__proto__ || Object.getPrototypeOf(Player.prototype), 'componentWillMount', this).call(this);
+            if (this.props.updateInterval) {
+                this.fetchLatestData();
+            }
         }
     }, {
         key: 'fetchLatestData',
@@ -1614,8 +1667,9 @@ var Player = function (_React$Component) {
                 this.setState({
                     gameState: data
                 });
-                // temporailly disabled due to sandbox performance
-                // setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
+                if (this.props.updateInterval) {
+                    setTimeout(this.fetchLatestData.bind(this), this.props.updateInterval);
+                }
             }.bind(this), function (e) {
                 // fail silently
             });
@@ -1630,31 +1684,50 @@ var Player = function (_React$Component) {
             var player = this.state.gameState.player;
             return _react2.default.createElement(
                 'div',
-                { className: 'header__player' },
+                { className: 'header' },
                 _react2.default.createElement(
-                    'span',
-                    { className: 'header__points' },
-                    _react2.default.createElement(_Points2.default, {
-                        value: player.points,
-                        time: player.pointsCalculationTime,
-                        rate: player.pointsRate
-                    })
-                ),
-                _react2.default.createElement(
-                    'span',
-                    { className: 'header__playername' },
-                    player.nickname
-                ),
-                _react2.default.createElement(
-                    'span',
-                    { className: 'header__settings' },
+                    'div',
+                    { className: 'layout-limit' },
                     _react2.default.createElement(
-                        'svg',
-                        {
-                            className: 'header__settings-icon',
-                            viewBox: '0 0 24 24',
-                            xmlns: 'http://www.w3.org/2000/svg' },
-                        _react2.default.createElement('use', { xlinkHref: '#icon-settings' })
+                        'div',
+                        { className: 'grid grid--flush' },
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'header__points g 1/2' },
+                            _react2.default.createElement(
+                                'div',
+                                null,
+                                _react2.default.createElement(_Points2.default, {
+                                    value: player.points,
+                                    time: player.pointsCalculationTime,
+                                    rate: player.pointsRate })
+                            )
+                        ),
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'header__player g 1/2' },
+                            _react2.default.createElement(
+                                'div',
+                                null,
+                                _react2.default.createElement(
+                                    'span',
+                                    { className: 'header__playername' },
+                                    player.nickname
+                                ),
+                                _react2.default.createElement(
+                                    'span',
+                                    { className: 'header__settings' },
+                                    _react2.default.createElement(
+                                        'svg',
+                                        {
+                                            className: 'header__settings-icon',
+                                            viewBox: '0 0 24 24',
+                                            xmlns: 'http://www.w3.org/2000/svg' },
+                                        _react2.default.createElement('use', { xlinkHref: '#icon-settings' })
+                                    )
+                                )
+                            )
+                        )
                     )
                 )
             );
@@ -1662,11 +1735,11 @@ var Player = function (_React$Component) {
     }]);
 
     return Player;
-}(_react2.default.Component);
+}(_GamePanel3.default);
 
 exports.default = Player;
 
-},{"../utils/FetchJson":17,"./utils/Points":16,"react":"react"}],10:[function(require,module,exports){
+},{"../../utils/FetchJson":16,"../utils/Points":15,"./GamePanel":7,"react":"react"}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1825,7 +1898,7 @@ var Hub = function (_React$Component) {
 
 exports.default = Hub;
 
-},{"../utils/FetchJson":17,"./utils/Player":15,"react":"react"}],11:[function(require,module,exports){
+},{"../utils/FetchJson":16,"./utils/Player":14,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1968,7 +2041,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"../utils/FetchJson":17,"./utils/Points":16,"react":"react"}],12:[function(require,module,exports){
+},{"../utils/FetchJson":16,"./utils/Points":15,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2067,7 +2140,7 @@ var Hub = function (_React$Component) {
 
 exports.default = Hub;
 
-},{"../utils/FetchJson":17,"./Utils/Player":13,"react":"react"}],13:[function(require,module,exports){
+},{"../utils/FetchJson":16,"./Utils/Player":12,"react":"react"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2131,7 +2204,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"./Points":14,"react":"react"}],14:[function(require,module,exports){
+},{"./Points":13,"react":"react"}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2219,11 +2292,11 @@ var Points = function (_React$Component) {
 
 exports.default = Points;
 
-},{"react":"react"}],15:[function(require,module,exports){
+},{"react":"react"}],14:[function(require,module,exports){
+arguments[4][12][0].apply(exports,arguments)
+},{"./Points":15,"dup":12,"react":"react"}],15:[function(require,module,exports){
 arguments[4][13][0].apply(exports,arguments)
-},{"./Points":16,"dup":13,"react":"react"}],16:[function(require,module,exports){
-arguments[4][14][0].apply(exports,arguments)
-},{"dup":14,"react":"react"}],17:[function(require,module,exports){
+},{"dup":13,"react":"react"}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2299,7 +2372,7 @@ var FetchJson = function () {
 
 exports.default = FetchJson;
 
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

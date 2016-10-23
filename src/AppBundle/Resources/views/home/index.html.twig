@@ -1,31 +1,35 @@
 {% extends 'AppBundle::base.html.twig' %}
 
 {% block body %}
-<h1>Time & Distance</h1>
-    <p>Here's where we tell you all about it</p>
-    <p><a href="{{ path('play') }}">Play now</a></p>
+    <div style="background: #559; color: #fff; padding: 80px 0; color: #fff">
+        <div class="layout-limit">
+            <h1>Time & Distance</h1>
+        </div>
+    </div>
+    <div style="padding: 16px 0">
+        <div class="layout-limit">
+            <p>Here's where we tell you all about it</p>
+            <p><a href="{{ path('play') }}">Play now</a></p>
 
-    <p>Show some live updating stats with links to more, such as:</p>
-    <ul>
-        <li>Movements just made</li>
-        <li>Attacks happening</li>
-        <li>etc</li>
-    </ul>
+            <p>Show some live updating stats with links to more, such as:</p>
+            <ul>
+                <li>Movements just made</li>
+                <li>Attacks happening</li>
+                <li>etc</li>
+            </ul>
+        </div>
+    </div>
 
     {% if hasConflicts %}
-        <h2>Recent conflicts</h2>
-        <ul>
-            {% for conflict in conflicts %}
-                <li>{{ conflict.text }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endblock %}
-
-{% block footerScripts %}
-    {% if allowRedirect %}
-    <script>
-        document.write('<p>TODO - Redirect (via JavaScript) if you are already logged in</p>');
-    </script>
+    <div style="padding: 16px 0; background: #595; color:#fff">
+        <div class="layout-limit">
+            <h2>Recent conflicts</h2>
+            <ul>
+                {% for conflict in conflicts %}
+                    <li>{{ conflict.text }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
     {% endif %}
 {% endblock %}

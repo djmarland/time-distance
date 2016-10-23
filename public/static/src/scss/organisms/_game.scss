@@ -1,56 +1,62 @@
-.game-body {
-    &,
-    .body-area,
-    .game {
-        width: 100%;
-        height: 100%;
-    }
-}
-
-.game__panel {
+.game {
 
 }
 
-.game__panel--active {
-    @include mq($until: xl) {
-        height: calc(100vh - #{$size-header-height});
-    }
+.game__header {
+    height: $size-header-height;
 }
 
-.game__panel--board {
-    @include mq($from: xl) {
-        height: 64vh;
-    }
-}
-.game__panel--player,
-.game__panel--abilities {
-    background: green;
-    @include mq($from: xl) {
-        height: calc(36vh - #{$size-header-height});
-    }
+.game__tabs {
+    height: $size-tabs-height;
+    background: $color-black;
+    color: $color-white;
 }
 
-.game__panel--location {
-    background: goldenrod;
-}
-.game__panel--abilities {
-    background: brown;
-    overflow: auto;
+.game__main {
+    height: calc(100vh - #{$size-header-height} - #{$size-tabs-height});
+    overflow-y: auto;
+    background: $color-white;
 }
 
-.game__travelling {
+.game__tabs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.game__tab {
+    display: inline-block;
+    width: 20%;
     position: relative;
-    background: $color-white;
 }
-.game__travelling-details {
-    position: absolute;
-    bottom: $size-grid-unit;
+.game__tab-button {
+    text-align: center;
     display: block;
     width: 100%;
+    background: transparent;
+    height: $size-tabs-height;
+    border: none;
+    &:hover,
+    &:focus {
+        background: rgba(255,255,255,0.1);
+    }
 }
-.game__travelling-visual {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: $color-white;
+.game__tab--active {
+    &:after {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        border-top: solid 12px $color-white;
+        border-left: solid 12px transparent;
+        border-right: solid 12px transparent;
+    }
+
+    .game__tab-button {
+        &:hover,
+        &:focus {
+            background: transparent;
+        }
+    }
 }

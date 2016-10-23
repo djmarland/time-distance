@@ -1,0 +1,8 @@
+.layout-limit {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: $size-grid-unit-small;
+    padding-right: $size-grid-unit-small;
+    max-width: $size-width-limit;
+}

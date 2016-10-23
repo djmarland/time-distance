@@ -2,6 +2,7 @@
 
 {% block body %}
     <div id="app-hub" data-initial="{{ feedData|json_encode }}" data-hubkey={{ hub.urlKey }}>
+    <div class="layout-limit">
         <h1 class="g-unit">{{ hub.name }}</h1>
         <p>{{ hub.clusterName }}</p>
         <h2>Owned by:</h2>
@@ -28,5 +29,6 @@
         {% endif %}
 
         <h2>Abilities available for pickup</h2>
+    </div>
     </div>
 {% endblock %}

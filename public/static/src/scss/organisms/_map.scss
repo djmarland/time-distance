@@ -2,6 +2,8 @@
     overflow: hidden;
     background: $color-white;
     background: radial-gradient(circle at center, $color-grey-mid 0%, $color-grey-lightest 80%);
+    height: 100%;
+    width: 100%;
 }
 
 .map__board {

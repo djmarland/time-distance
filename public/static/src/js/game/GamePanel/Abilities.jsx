@@ -16,10 +16,7 @@ export default class Abilities extends GamePanel {
         });
 
         return (
-            <div >
-                <h2>Abilities</h2>
-                <ul className="abilities-list">{groups}</ul>
-            </div>
+            <ul className="abilities-list">{groups}</ul>
         );
     };
 }
@@ -38,8 +35,12 @@ class AbilitiesGroup extends React.Component {
 
         return (
             <div>
-                <h3 className="abilities-list__group-heading e">{this.props.group.title}</h3>
-                <ul className="abilities-list__group-items grid">{items}</ul>
+                <h3 className="abilities-list__group-heading e">
+                    <span className="layout-limit">{this.props.group.title}</span>
+                </h3>
+                <div className="layout-limit">
+                    <ul className="abilities-list__group-items grid">{items}</ul>
+                </div>
             </div>
         )
     }

@@ -1,0 +1,9 @@
+.loading-page {
+    text-align: center;
+    padding: $size-grid-unit 0;
+    padding-top: 40vh;
+}
+.loading-page__spinner {
+    width: 40px;
+    margin: $size-grid-unit auto;
+}

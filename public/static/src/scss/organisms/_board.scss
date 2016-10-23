@@ -1,0 +1,32 @@
+.board {
+    position: relative;
+    height: 100%;
+}
+
+.board__hub-intro {
+    padding: $size-grid-unit 0;
+    background: $color-brand;
+    color: $color-white;
+    margin-bottom: $size-grid-unit;
+}
+.board__hub-flag {
+    float: right;
+    margin-left: $size-grid-unit;
+    display: block;
+    max-width: 30%;
+    border: solid 2px $color-black;
+    background: $color-white;
+    width: 160px;
+    height: 90px;
+}
+
+.board__view-switch {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: inline-block;
+    border: 0;
+    background: red;
+    color: white;
+    padding: $size-grid-unit;
+}

@@ -21,6 +21,7 @@ class GameController extends Controller
     public function playAction()
     {
         $this->setPlayerPosition($this->getPlayer());
+        $this->toView('gameState', $this->getStatus());
         return $this->renderTemplate('game:play');
     }
 
@@ -224,19 +225,26 @@ class GameController extends Controller
 
     private function renderStatus()
     {
+        $status = $this->getStatus();
+        foreach ($status as $key => $value) {
+            $this->toView($key, $value, true);
+        }
+        return $this->renderJSON();
+    }
+
+    private function getStatus(): array
+    {
+        $status = [];
         $player = $this->getPlayer();
         $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
         $visibilityWindow = $this->getParameter('visibility_window');
 
-        $this->toView(
-            'gameSettings', [
-                'currentTime' => $this->get('app.time_provider')->format('c'),
-                'distanceMultiplier' => $this->getParameter('distance_multiplier'),
-                'visibilityWindow' => $visibilityWindow,
-                'originalPurchaseCost' => $this->getParameter('original_purchase_cost'),
-            ],
-            true
-        );
+        $status['gameSettings'] = [
+            'currentTime' => $this->get('app.time_provider')->format('c'),
+            'distanceMultiplier' => $this->getParameter('distance_multiplier'),
+            'visibilityWindow' => $visibilityWindow,
+            'originalPurchaseCost' => $this->getParameter('original_purchase_cost'),
+        ];
 
         $directions = $this->getDirections($position);
         if ($directions) {
@@ -245,9 +253,9 @@ class GameController extends Controller
 
         $map = new Map($position, $directions, [], $visibilityWindow);
 
-        $this->toView('player', $player, true);
-        $this->toView('map', $map, true);
-        $this->toView('position', $position, true);
+        $status['player'] = $player;
+        $status['map'] = $map;
+        $status['position'] = $position;
 
         // get the abilities (and check against the player)
         $abilities = $this->get('app.services.abilities')->findAll();
@@ -263,8 +271,8 @@ class GameController extends Controller
                 ->findPresentInHub($hub);
         }
 
-        $this->toView('playersPresent', $playersPresent, true);
-        $this->toView('abilitiesPresent', $abilitiesPresent, true);
+        $status['playersPresent'] = $playersPresent;
+        $status['abilitiesPresent'] = $abilitiesPresent;
 
         // sort the abilities into type groups
         // and hide them if they are mystery and this player has not seen them
@@ -311,9 +319,8 @@ class GameController extends Controller
             return false;
         });
 
-        $this->toView('abilities', $abilityGroups, true);
-
-        return $this->renderJSON();
+        $status['abilities'] = $abilityGroups;
+        return $status;
     }
 
     private function getPlayer(): Player

@@ -1,11 +1,55 @@
+@-webkit-keyframes ABILITY-JIGGLE1 {
+    0% {
+        transform: rotate(-1deg);
+        -webkit-animation-timing-function: ease-in;
+    }
+    50% {
+        transform: rotate(1.5deg);
+        -webkit-animation-timing-function: ease-out;
+    }
+}
+@keyframes ABILITY-JIGGLE1 {
+    0% {
+        transform: rotate(-1deg);
+        animation-timing-function: ease-in;
+    }
+    50% {
+        transform: rotate(1.5deg);
+        animation-timing-function: ease-out;
+    }
+}
+
+@-webkit-keyframes ABILITY-JIGGLE2 {
+    0% {
+        transform: rotate(1deg);
+        -webkit-animation-timing-function: ease-in;
+    }
+    50% {
+        transform: rotate(-1.5deg);
+        -webkit-animation-timing-function: ease-out;
+    }
+}
+@keyframes ABILITY-JIGGLE2 {
+    0% {
+        transform: rotate(1deg);
+        animation-timing-function: ease-in;
+    }
+    50% {
+        transform: rotate(-1.5deg);
+        animation-timing-function: ease-out;
+    }
+}
+
 .ability {
-    display: block;
+    display: inline-block;
+    margin-bottom: $size-grid-unit;
+    margin-right: $size-grid-unit;
     border: 0;
     background: $color-grey-dark;
     color: $color-white;
     border-radius: $size-grid-unit-tiny;
     text-align: center;
-    width: 100%;
+    width: 120px;
     position: relative;
     &:hover,
     &:focus {
@@ -14,6 +58,52 @@
     &:active {
         background: $color-grey-darkest;
         top: 1px;
+    }
+}
+
+.ability--hub {
+    &:nth-child(2n) {
+        -webkit-animation-name: ABILITY-JIGGLE1;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-delay: 0.3s;
+        -webkit-animation-duration: 0.24s;
+        animation-name: ABILITY-JIGGLE1;
+        animation-iteration-count: infinite;
+        animation-delay: 0.3s;
+        animation-duration: 0.24s;
+        transform-origin: 50% 10%;
+
+    }
+    &:nth-child(2n-1) {
+        -webkit-animation-name: ABILITY-JIGGLE2;
+        -webkit-animation-direction: alternate;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-delay: 0.23s;
+        -webkit-animation-duration: 0.28s;
+        animation-name: ABILITY-JIGGLE2;
+        animation-direction: alternate;
+        animation-iteration-count: infinite;
+        animation-delay: 0.23s;
+        animation-duration: 0.28s;
+        transform-origin: 30% 5%;
+    }
+    &:nth-child(3n) {
+        -webkit-animation-delay: 0.12s;
+        -webkit-animation-duration: 0.21s;
+        animation-delay: 0.12s;
+        animation-duration: 0.21s;
+    }
+    &:nth-child(5n) {
+        -webkit-animation-delay: 0.2s;
+        -webkit-animation-duration: 0.23s;
+        animation-delay: 0.2s;
+        animation-duration: 0.23s;
+    }
+    &:nth-child(6n) {
+        -webkit-animation-delay: 0.5s;
+        -webkit-animation-duration: 0.26s;
+        animation-delay: 0.5s;
+        animation-duration: 0.26s;
     }
 }
 

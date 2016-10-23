@@ -1,3 +1,8 @@
+.header-container {
+    height: $size-header-height;
+    background: #000;
+}
+
 .header {
     padding: $size-grid-unit-tiny;
     height: $size-header-height;
@@ -13,7 +18,7 @@
     display: inline-block;
     width: 24px;
     vertical-align: top;
-    margin-left: $size-grid-unit;
+    margin-left: $size-grid-unit-small;
 }
 
 .header__settings-icon {
@@ -21,5 +26,4 @@
 }
 
 .header__points {
-    margin-right: $size-grid-unit;
 }

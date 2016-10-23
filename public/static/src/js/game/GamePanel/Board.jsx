@@ -5,6 +5,17 @@ import BoardSpoke from './Board/Spoke';
 import BoardMap from './Board/Map';
 
 export default class Board extends GamePanel {
+    constructor() {
+        super();
+        this.state.viewMap = false;
+    }
+
+    switchView() {
+        this.setState({
+           viewMap : !this.state.viewMap
+        });
+    }
+
     changeHub(bearing) {
         // todo loading state (fancy animation?)
         FetchJson.postUrl(
@@ -64,15 +75,40 @@ export default class Board extends GamePanel {
 
     render() {
         let gameState = this.state.gameState;
-        if (!gameState.position.isInHub) {
+
+        if (this.state.viewMap) {
             return (
-                <BoardSpoke
-                    onGameStateChange={this.updateGlobalGameState.bind(this)}
-                    position={gameState.position} />
+                <div className="board">
+                    <BoardMap onChangeHub={this.changeHub.bind(this)} gameState={this.state.gameState}/>
+                    <button className="board__view-switch board__view-switch--location"
+                            onClick={this.switchView.bind(this)}>
+                        <span className="board__view-switch-text">Location</span>
+                    </button>
+                </div>
             );
         }
 
-        let location = (<BoardLocationHub onTakeHub={this.takeHub.bind(this)} gameState={gameState} />);
+        let viewSwitcher = (
+            <button className="board__view-switch board__view-switch--map"
+                    onClick={this.switchView.bind(this)}>
+                <span className="board__view-switch-text">Map</span>
+            </button>
+        );
+
+        if (!gameState.position.isInHub) {
+            return (
+                <div className="board">
+                    <BoardSpoke
+                        onGameStateChange={this.updateGlobalGameState.bind(this)}
+                        position={gameState.position} />
+                    {viewSwitcher}
+                </div>
+            )
+        }
+
+        let position = gameState.position;
+
+        // {/*let location = (<BoardLocationHub onTakeHub={this.takeHub.bind(this)} gameState={gameState} />);*/}
 
         let playersPresent = null;
         if (gameState.playersPresent && gameState.playersPresent.length > 0) {
@@ -106,7 +142,7 @@ export default class Board extends GamePanel {
                     this.takeAbility(ability.uniqueKey);
                 }.bind(this);
                 abilities.push(
-                    <button key={i} onClick={onClick} className="ability">
+                    <button key={i} onClick={onClick} className="ability ability--hub">
                         <span className="ability__name">{ability.name}</span>
                     </button>
                 );
@@ -114,18 +150,29 @@ export default class Board extends GamePanel {
         }
 
         return (
-            <div className="grid grid--flat">
-                <div className="g 2/3@xl">
-                    <BoardMap onChangeHub={this.changeHub.bind(this)} gameState={this.state.gameState}/>
-                </div>
-                <div className="g 1/3@xl game__panel--location">
-                    {location}
-                    {playersPresent}
-                    <div>
-                        <h2>Abilities here</h2>
-                        {abilities}
+            <div className="board">
+                <div className="board__hub-intro">
+                    <div className="layout-limit">
+                        <div className="board__hub-flag">FLAG</div>
+                        <h1>{position.location.name}</h1>
+                        <h2>{position.location.cluster.name}</h2>
                     </div>
                 </div>
+                <div className="layout-limit">
+                    <div className="grid grid--flat">
+                        <div className="g 1/2@xl">
+                            BIG HEXAGON
+                        </div>
+                        <div className="g 1/2@xl">
+                            {playersPresent}
+                            <div>
+                                <h2>Abilities here</h2>
+                                <div>{abilities}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {viewSwitcher}
             </div>
         );
     };
@@ -181,58 +228,3 @@ class BoardLocationHub extends React.Component {
         );
     }
 }
-
-
-
-/*
- class BoardHubOption extends React.Component {
- goToHub() {
- this.props.onChangeHub(this.props.direction.bearing);
- }
-
- displayDistance(distance) {
- if (distance === 0) {
- let secs = Math.floor(this.props.distanceMultiplier/60);
- return Math.max(secs, 1) + ' seconds';
- }
- let totalSeconds = distance * this.props.distanceMultiplier,
- hours = (totalSeconds / 3600);
-
- if (hours == 1) {
- return hours + ' hour';
- } else if (hours > 1) {
- return hours + ' hours';
- }
- return totalSeconds/60 + ' minutes';
- }
-
- render() {
- let directionEl = null,
- direction = this.props.direction;
-
- if (direction) {
- let crossingVoid = null;
- if (direction.crossesTheVoid) {
- crossingVoid = (<p>CROSSING THE VOID</p>);
- }
- directionEl = (
- <div>
- <h4>{direction.hub.name} - {direction.hub.cluster.name}</h4>
- <p>
- Distance: {this.displayDistance(direction.distance)}
- <button onClick={this.goToHub.bind(this)}>Go there</button>
- </p>
- {crossingVoid}
- </div>
- );
- }
-
- return (
- <div className="g 1/2">
- <h3>{this.props.directionKey}</h3>
- {directionEl}
- </div>
- );
- }
- }
- */

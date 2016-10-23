@@ -14,20 +14,11 @@
 </head>
 <body class="{% block bodyClass %}{% endblock %}" data-env="{{ meta.environment }}">
 {% include '@partials/_icons.html.twig' %}
-<div class="grid grid--flush">
-    <div class="header g"><header>
-        <div class="grid">
-            <div class="g 1/2">
-                Time &amp; Distance
-            </div>
-            <div class="g 1/2">
-                <div id="app-header"></div>
-            </div>
-        </div>
-    </header></div>
-    <div class="g"><main>
+<div id="app-container" data-app="{% block appId %}{% endblock %}" data-initial="{% block appInitial %}{% endblock %}">
+    <div id="header-container" data-app="header" class="header-container"></div>
+    <main>
         {% block body %}{% endblock %}
-    </main></div>
+    </main>
 </div>
 {% block footerScripts %}
     <script src="{{ 'vendor.js'|asset_path }}"></script>
