@@ -124,7 +124,7 @@ export default class Spoke extends React.Component {
 
     arrival() {
         FetchJson.getUrl(
-            '/play/arrival.json',
+            '/play/status.json',
             function(newGameState) {
                 if (newGameState.position.isInHub) {
                     this.props.onGameStateChange(newGameState);

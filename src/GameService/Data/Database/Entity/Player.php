@@ -8,7 +8,10 @@ use GameService\Data\Database\Entity\Status\PlayerStatus;
 /**
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks()
- * @ORM\Table(name="players",indexes={@ORM\Index(name="player_nickname_idx", columns={"nickname"})})
+ * @ORM\Table(name="players",indexes={
+ *     @ORM\Index(name="player_nickname_idx", columns={"nickname"}),
+ *     @ORM\Index(name="player_time_of_death_idx", columns={"time_of_death"}),
+ * })
  * @ORM\Entity(repositoryClass="GameService\Data\Database\EntityRepository\PlayerRepository")
  */
 class Player extends Entity
@@ -24,6 +27,9 @@ class Player extends Entity
 
     /** @ORM\Column(type="datetime") */
     private $pointsCalculationTime;
+
+    /** @ORM\Column(type="datetime", nullable=true) */
+    private $timeOfDeath;
 
     /**
      * @ORM\ManyToOne(targetEntity="Hub")
@@ -86,6 +92,16 @@ class Player extends Entity
     public function getPointsCalculationTime(): DateTimeInterface
     {
         return $this->pointsCalculationTime;
+    }
+
+    public function setTimeOfDeath(DateTimeInterface $timeOfDeath = null)
+    {
+        $this->timeOfDeath = $timeOfDeath;
+    }
+
+    public function getTimeOfDeath()
+    {
+        return $this->timeOfDeath;
     }
 
     public function setHomeHub(Hub $hub)

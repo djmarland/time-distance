@@ -68,24 +68,6 @@ class Ability extends Entity implements \JsonSerializable
         return $this->uniqueKey;
     }
 
-    /**
-     * based on the spawn rate, return a boolean with those odds
-     * can return different values on each call
-     */
-    public function shouldSpawn(): bool
-    {
-        // spawnRate is between 0 and 1 - 1 = always spawn
-        if ($this->spawnRate === 0) {
-            return false; // never spawn for 0, so get out early
-        }
-
-        // generate a random number between 0 and 100 then get it between 0 and 1
-        $rand = mt_rand(0, 100) / 100;
-
-        // will spawn  only if the rand number was below the spawn threshold
-        return ($rand <= $this->spawnRate);
-    }
-
     public function jsonSerialize()
     {
         $data = [

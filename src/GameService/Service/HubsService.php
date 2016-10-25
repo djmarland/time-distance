@@ -176,21 +176,6 @@ class HubsService extends Service
         }
     }
 
-    public function addAbilities(Hub $hub, array $abilitiesToAdd)
-    {
-        // fetch the Hub entity
-        $hubEntity = $this->getHubEntity($hub);
-
-        $currentStatus = $hubEntity->getStatus();
-        foreach($abilitiesToAdd as $ability) {
-            $currentStatus->createAbility($ability->getId());
-        }
-        $hubEntity->setStatus($currentStatus);
-
-        $this->entityManager->persist($hubEntity);
-        $this->entityManager->flush();
-    }
-
     private function getPlayerEntity(Player $player): PlayerEntity
     {
         // todo - move these to EntityRepos (findbyId)

@@ -1415,7 +1415,7 @@ var Spoke = function (_React$Component) {
     }, {
         key: 'arrival',
         value: function arrival() {
-            _FetchJson2.default.getUrl('/play/arrival.json', function (newGameState) {
+            _FetchJson2.default.getUrl('/play/status.json', function (newGameState) {
                 if (newGameState.position.isInHub) {
                     this.props.onGameStateChange(newGameState);
                 } else {

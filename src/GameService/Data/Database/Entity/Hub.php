@@ -8,6 +8,7 @@ use GameService\Data\Database\Entity\Status\HubStatus;
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks()
  * @ORM\Table(name="hubs",indexes={@ORM\Index(name="hub_urlkey_idx", columns={"url_key"})})
+ * @ORM\Entity(repositoryClass="GameService\Data\Database\EntityRepository\HubRepository")
  */
 class Hub extends Entity
 {
@@ -95,6 +96,9 @@ class Hub extends Entity
         return $this->isHaven;
     }
 
+    /**
+     * @return Player|null
+     */
     public function getOwner()
     {
         return $this->owner;

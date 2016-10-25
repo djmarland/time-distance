@@ -28,33 +28,53 @@ services:
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+          - "@logger"
+
+  app.services.game_action:
+      class: GameService\Service\GameActionService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
+          - "@logger"
+
+  app.services.game_management:
+      class: GameService\Service\GameManagementService
+      arguments:
+          - "@doctrine.orm.default_entity_manager"
+          - "@app.time_provider"
+          - "@logger"
 
   app.services.hubs:
       class: GameService\Service\HubsService
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+          - "@logger"
 
   app.services.players:
       class: GameService\Service\PlayersService
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+          - "@logger"
 
   app.services.positions:
       class: GameService\Service\PositionsService
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+          - "@logger"
 
   app.services.spokes:
       class: GameService\Service\SpokesService
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+          - "@logger"
 
   app.services.transactions:
       class: GameService\Service\TransactionsService
       arguments:
           - "@doctrine.orm.default_entity_manager"
           - "@app.time_provider"
+          - "@logger"

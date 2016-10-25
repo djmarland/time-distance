@@ -13,6 +13,7 @@ use GameService\Domain\Entity\Hub;
 use GameService\Domain\Entity\Player;
 use GameService\Domain\Entity\Spoke;
 use GameService\Domain\Exception\EntityNotFoundException;
+use GameService\Domain\Game;
 use GameService\Domain\ValueObject\Nickname;
 
 class PlayersService extends Service
@@ -144,8 +145,8 @@ class PlayersService extends Service
 
         try {
             // create the player
-            $initialPoints = 0;
-            $initialPointsRate = 0;
+            $initialPoints = Game::INITIAL_SCORE;
+            $initialPointsRate = Game::INITIAL_SCORE_RATE;
             $initialPointsTime = $now;
             $player = new PlayerEntity(
                 $nickname,
@@ -285,8 +286,8 @@ class PlayersService extends Service
         // we need to save the players accurate score
         $playerEntity = $this->updatePlayerScore($playerEntity);
 
-        // we're moving from a hub to a spoke. The point rate gains 1
-        $pointRate = $playerEntity->getPointsRate() + 1;
+        // we're moving from a hub to a spoke. The point rate increases
+        $pointRate = $playerEntity->getPointsRate() + Game::TRAVELLING_RATE;
 
         // was the hub just left owned by another player?
         /** @var PlayerEntity $owner */
@@ -296,13 +297,15 @@ class PlayersService extends Service
             $owner = $this->updatePlayerScore($owner);
 
             // derease the owners score for the departed
-            $owner->setPointsRate($owner->getPointsRate() - 1);
+            $owner->setPointsRate($owner->getPointsRate() - Game::SQUATTERS_COST);
 
             // increase the squatters score
-            $pointRate++;
+            $pointRate = $pointRate + Game::SQUATTERS_COST;
         }
 
         $playerEntity->setPointsRate($pointRate);
+        // now in a spoke. all safe
+        $playerEntity->setTimeOfDeath(null);
 
         // start transaction
         $this->entityManager->beginTransaction();

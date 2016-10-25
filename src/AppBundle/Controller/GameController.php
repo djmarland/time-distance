@@ -11,6 +11,7 @@ use GameService\Domain\Entity\Spoke;
 use GameService\Domain\Exception\EntityNotFoundException;
 use GameService\Domain\Exception\InvalidBearingException;
 use GameService\Domain\Exception\InvalidNicknameException;
+use GameService\Domain\Game;
 use GameService\Domain\ValueObject\Bearing;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -20,17 +21,13 @@ class GameController extends Controller
 
     public function playAction()
     {
-        $this->setPlayerPosition($this->getPlayer());
         $this->toView('gameState', $this->getStatus());
         return $this->renderTemplate('game:play');
     }
 
     public function arrivalAction()
     {
-        // todo - this is temporary. find a better way
-
-        // set where the player is
-        $this->setPlayerPosition($this->getPlayer());
+        // todo - remove
         return $this->renderStatus();
     }
 
@@ -124,7 +121,7 @@ class GameController extends Controller
     public function takeHubAction()
     {
         $player = $this->getPlayer();
-        $cost = $this->getParameter('original_purchase_cost');
+        $cost = Game::HUB_PURCHASE_COST;
 
         // get the current players position
         $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
@@ -193,36 +190,6 @@ class GameController extends Controller
         return $this->renderStatus();
     }
 
-    private function setPlayerPosition(Player $player)
-    {
-        // todo - safety checks to ensure this can only be done one at a time per player
-        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
-
-        if (!$position->isInHub()) {
-            // check if the player should be moved into a hub
-            if ($position->getExitTime() <= $this->get('app.time_provider')) {
-                $hub = $position->getLocation()->getDestinationHubFromDirection($position->isReverseDirection());
-
-                $this->get('app.services.players')->movePlayerToHub($player, $hub);
-
-                // randomly assign some abilities to this hub
-                // todo - this action should happen via a different trigger (as it is not in a transaction)
-                $this->spawnAbilitiesInHub($hub);
-            }
-        }
-    }
-
-    private function spawnAbilitiesInHub(Hub $hub)
-    {
-        $abilities = $this->get('app.services.abilities')->findAll();
-        // which abilities should be chosen
-        $chosenAbilities = array_filter($abilities, function($ability) {
-            /** @var Ability $ability */
-            return $ability->shouldSpawn();
-        });
-        $this->get('app.services.hubs')->addAbilities($hub, $chosenAbilities);
-    }
-
     private function renderStatus()
     {
         $status = $this->getStatus();
@@ -243,7 +210,7 @@ class GameController extends Controller
             'currentTime' => $this->get('app.time_provider')->format('c'),
             'distanceMultiplier' => $this->getParameter('distance_multiplier'),
             'visibilityWindow' => $visibilityWindow,
-            'originalPurchaseCost' => $this->getParameter('original_purchase_cost'),
+            'originalPurchaseCost' => Game::HUB_PURCHASE_COST,
         ];
 
         $directions = $this->getDirections($position);
@@ -325,7 +292,8 @@ class GameController extends Controller
 
     private function getPlayer(): Player
     {
-        $nickname = 'e7400f94';
+        $nickname = 'be219035';
+//        $nickname = 'e7400f94';
         // @todo - fetch by cookie token
         try {
             return $this->get('app.services.players')

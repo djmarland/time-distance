@@ -14,6 +14,7 @@ use InvalidArgumentException;
  *     @ORM\Index(name="position_completed_time_idx", columns={"completed_time"}),
  *     @ORM\Index(name="position_player_completed_time_idx", columns={"player_id","completed_time"}),
  * })
+ * @ORM\Entity(repositoryClass="GameService\Data\Database\EntityRepository\PositionRepository")
  */
 class Position extends Entity
 {
