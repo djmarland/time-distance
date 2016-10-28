@@ -2,8 +2,10 @@
     overflow: hidden;
     background: $color-white;
     background: radial-gradient(circle at center, $color-grey-mid 0%, $color-grey-lightest 80%);
+    line-height: 0;
     height: 100%;
     width: 100%;
+    min-height: 400px; // todo - be more responsive
 }
 
 .map__board {
@@ -21,22 +23,17 @@
 }
 
 .map__hub {
-    stroke-width: $size-grid-unit-tiny;
+    stroke-width: $size-grid-unit-small;
     fill: #fff;
 }
 
 .map__hub--current {
-    stroke-width: $size-grid-unit-small;
     stroke: $color-black;
 }
 
 .map__hub--available {
     cursor: pointer;
     stroke: green;
-}
-
-.map__hub--haven {
-    stroke-dasharray: 1;
 }
 
 @keyframes SPOKEVOID {
@@ -49,8 +46,9 @@
 }
 
 .map__spoke {
-    stroke: $color-black;
-    stroke-width: $size-grid-unit-tiny;
+    stroke: $color-brand;
+    stroke-width: $size-grid-unit-small;
+    stroke-dasharray: 1;
 }
 .map__spoke--void {
     stroke-dasharray: 40;

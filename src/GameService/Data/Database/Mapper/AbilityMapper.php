@@ -13,6 +13,7 @@ class AbilityMapper extends Mapper
             $item['name'],
             $item['imageKey'],
             $item['type'],
+            $item['class'],
             $item['description'],
             $item['spawnRate'],
             $item['isMystery'],

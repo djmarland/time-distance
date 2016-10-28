@@ -1,13 +1,17 @@
 .board {
+    @extend .grid;
+    @extend .grid--flush;
+    @include flex-flow(column);
+    overflow: hidden;
     position: relative;
     height: 100%;
 }
 
 .board__hub-intro {
+    @extend .g;
     padding: $size-grid-unit 0;
     background: $color-brand;
     color: $color-white;
-    margin-bottom: $size-grid-unit;
 }
 .board__hub-flag {
     float: right;
@@ -20,13 +24,16 @@
     height: 90px;
 }
 
-.board__view-switch {
+.board__map {
+    @extend .g;
+    @include flex(1);
+    position: relative;
+}
+
+.board__hub-detail {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    display: inline-block;
-    border: 0;
-    background: red;
-    color: white;
+    top: 0;
     padding: $size-grid-unit;
+    background: rgba(0,0,0,0.4);
+    color: $color-white;
 }

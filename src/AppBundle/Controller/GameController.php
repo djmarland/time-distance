@@ -185,6 +185,27 @@ class GameController extends Controller
         return $this->renderStatus();
     }
 
+    public function useAbilityAction()
+    {
+        $player = $this->getPlayer();
+        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
+
+        // check that we are in a hub
+        if (!$position->isInHub()) {
+            throw new HttpException(400, 'Not in a valid state to perform move');
+        }
+
+
+
+        $hub = $position->getLocation();
+        $abilityId = $this->request->getContent();
+
+        // take the ability
+        $this->get('app.services.hubs')->useAbility($position, $player, $abilityId);
+
+        return $this->renderStatus();
+    }
+
     public function statusAction()
     {
         return $this->renderStatus();
@@ -287,13 +308,20 @@ class GameController extends Controller
         });
 
         $status['abilities'] = $abilityGroups;
+        $status['playerHubs'] = $this->getPlayerHubs($player);
         return $status;
+    }
+
+    private function getPlayerHubs(Player $player): array
+    {
+        return $this->get('app.services.hubs')
+            ->findForPlayer($player);
     }
 
     private function getPlayer(): Player
     {
         $nickname = 'be219035';
-//        $nickname = 'e7400f94';
+//        $nickname = 'djmarland';
         // @todo - fetch by cookie token
         try {
             return $this->get('app.services.players')

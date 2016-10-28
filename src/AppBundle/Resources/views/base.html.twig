@@ -5,12 +5,7 @@
     <title>{{ meta.fullTitle }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ 'styles.css'|asset_path }}" />
-    <link href="https://fonts.googleapis.com/css?family=Baloo+Bhai" rel="stylesheet">
-    <style>
-        * {
-            font-family: 'Baloo Bhai', cursive!important;
-        }
-    </style>
+<!--    <link href="https://fonts.googleapis.com/css?family=Baloo+Bhai" rel="stylesheet">-->
 </head>
 <body class="{% block bodyClass %}{% endblock %}" data-env="{{ meta.environment }}">
 {% include '@partials/_icons.html.twig' %}

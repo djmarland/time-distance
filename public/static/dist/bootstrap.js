@@ -87,7 +87,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     }
 })();
 
-},{"./game/Game":2,"./game/GamePanel/Header":8,"./game/Hub":9,"./game/Player":10,"./game/Players":11,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
+},{"./game/Game":2,"./game/GamePanel/Header":8,"./game/Hub":10,"./game/Player":11,"./game/Players":12,"react":"react","react-dom":"react-dom"}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -111,6 +111,10 @@ var _Board2 = _interopRequireDefault(_Board);
 var _Abilities = require('./GamePanel/Abilities');
 
 var _Abilities2 = _interopRequireDefault(_Abilities);
+
+var _Hubs = require('./GamePanel/Hubs');
+
+var _Hubs2 = _interopRequireDefault(_Hubs);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -195,7 +199,7 @@ var Game = function (_React$Component) {
             var visiblePanel = null;
             switch (this.state.activePanel) {
                 case Game.PANEL_HUBS:
-                    visiblePanel = 'HUBS';
+                    visiblePanel = _react2.default.createElement(_Hubs2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) });
                     break;
                 case Game.PANEL_ABILITIES:
                     visiblePanel = _react2.default.createElement(_Abilities2.default, { gameState: this.state.gameState, onGameUpdate: this.updateGameState.bind(this) });
@@ -330,7 +334,7 @@ var GameTab = function (_React$Component2) {
     return GameTab;
 }(_react2.default.Component);
 
-},{"./GamePanel/Abilities":3,"./GamePanel/Board":4,"./GamePanel/Header":8,"react":"react"}],3:[function(require,module,exports){
+},{"./GamePanel/Abilities":3,"./GamePanel/Board":4,"./GamePanel/Header":8,"./GamePanel/Hubs":9,"react":"react"}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -573,7 +577,7 @@ var AbilitiesItem = function (_React$Component2) {
     return AbilitiesItem;
 }(_react2.default.Component);
 
-},{"../../utils/Lightbox":17,"./GamePanel":7,"react":"react"}],4:[function(require,module,exports){
+},{"../../utils/Lightbox":18,"./GamePanel":7,"react":"react"}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -602,6 +606,10 @@ var _Map = require('./Board/Map');
 
 var _Map2 = _interopRequireDefault(_Map);
 
+var _Lightbox = require('../../utils/Lightbox');
+
+var _Lightbox2 = _interopRequireDefault(_Lightbox);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -616,20 +624,10 @@ var Board = function (_GamePanel) {
     function Board() {
         _classCallCheck(this, Board);
 
-        var _this = _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this));
-
-        _this.state.viewMap = false;
-        return _this;
+        return _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this));
     }
 
     _createClass(Board, [{
-        key: 'switchView',
-        value: function switchView() {
-            this.setState({
-                viewMap: !this.state.viewMap
-            });
-        }
-    }, {
         key: 'changeHub',
         value: function changeHub(bearing) {
             // todo loading state (fancy animation?)
@@ -679,51 +677,18 @@ var Board = function (_GamePanel) {
         value: function render() {
             var gameState = this.state.gameState;
 
-            if (this.state.viewMap) {
-                return React.createElement(
-                    'div',
-                    { className: 'board' },
-                    React.createElement(_Map2.default, { onChangeHub: this.changeHub.bind(this), gameState: this.state.gameState }),
-                    React.createElement(
-                        'button',
-                        { className: 'board__view-switch board__view-switch--location',
-                            onClick: this.switchView.bind(this) },
-                        React.createElement(
-                            'span',
-                            { className: 'board__view-switch-text' },
-                            'Location'
-                        )
-                    )
-                );
-            }
-
-            var viewSwitcher = React.createElement(
-                'button',
-                { className: 'board__view-switch board__view-switch--map',
-                    onClick: this.switchView.bind(this) },
-                React.createElement(
-                    'span',
-                    { className: 'board__view-switch-text' },
-                    'Map'
-                )
-            );
-
             if (!gameState.position.isInHub) {
                 return React.createElement(
                     'div',
                     { className: 'board' },
                     React.createElement(_Spoke2.default, {
                         onGameStateChange: this.updateGlobalGameState.bind(this),
-                        position: gameState.position }),
-                    viewSwitcher
+                        position: gameState.position })
                 );
             }
 
-            var position = gameState.position;
-
-            // {/*let location = (<BoardLocationHub onTakeHub={this.takeHub.bind(this)} gameState={gameState} />);*/}
-
             var playersPresent = null;
+
             if (gameState.playersPresent && gameState.playersPresent.length > 0) {
                 (function () {
                     var players = [];
@@ -792,34 +757,23 @@ var Board = function (_GamePanel) {
                         React.createElement(
                             'div',
                             { className: 'board__hub-flag' },
-                            'FLAG'
+                            'FLAGGY FLAG!'
                         ),
-                        React.createElement(
-                            'h1',
-                            null,
-                            position.location.name
-                        ),
-                        React.createElement(
-                            'h2',
-                            null,
-                            position.location.cluster.name
-                        )
+                        React.createElement(BoardLocationHub, { onTakeHub: this.takeHub.bind(this),
+                            onGameStateChange: this.updateGlobalGameState.bind(this),
+                            gameState: gameState })
                     )
                 ),
                 React.createElement(
                     'div',
-                    { className: 'layout-limit' },
+                    { className: 'board__map' },
+                    React.createElement(_Map2.default, { onChangeHub: this.changeHub.bind(this), gameState: this.state.gameState }),
                     React.createElement(
                         'div',
-                        { className: 'grid grid--flat' },
+                        { className: 'board__hub-detail' },
                         React.createElement(
                             'div',
-                            { className: 'g 1/2@xl' },
-                            'BIG HEXAGON'
-                        ),
-                        React.createElement(
-                            'div',
-                            { className: 'g 1/2@xl' },
+                            { className: 'layout-limit' },
                             playersPresent,
                             React.createElement(
                                 'div',
@@ -837,8 +791,7 @@ var Board = function (_GamePanel) {
                             )
                         )
                     )
-                ),
-                viewSwitcher
+                )
             );
         }
     }]);
@@ -854,10 +807,43 @@ var BoardLocationHub = function (_React$Component) {
     function BoardLocationHub() {
         _classCallCheck(this, BoardLocationHub);
 
-        return _possibleConstructorReturn(this, (BoardLocationHub.__proto__ || Object.getPrototypeOf(BoardLocationHub)).apply(this, arguments));
+        var _this2 = _possibleConstructorReturn(this, (BoardLocationHub.__proto__ || Object.getPrototypeOf(BoardLocationHub)).call(this));
+
+        _this2.state = {
+            modalOpen: false
+        };
+        return _this2;
     }
 
     _createClass(BoardLocationHub, [{
+        key: 'openModal',
+        value: function openModal() {
+            this.setState({
+                modalOpen: true
+            });
+        }
+    }, {
+        key: 'modalCloseCallback',
+        value: function modalCloseCallback() {
+            this.setState({
+                modalOpen: false
+            });
+        }
+    }, {
+        key: 'useAbility',
+        value: function useAbility(abilityId) {
+            _FetchJson2.default.postUrl('/play/use-ability.json', abilityId, function (newGameState) {
+                this.props.onGameStateChange(newGameState);
+            }.bind(this), function (e) {
+                // todo - better error handling! (especially if someone else has already taken it)
+                var message = 'Error (did you try to cheat)';
+                if (e) {
+                    message += ' - ' + e.message;
+                }
+                alert(message);
+            });
+        }
+    }, {
         key: 'render',
         value: function render() {
             var haven = null,
@@ -866,6 +852,7 @@ var BoardLocationHub = function (_React$Component) {
                 position = gameState.position,
                 protectionScore = null,
                 owner = null;
+
             if (position.location.isHaven) {
                 haven = React.createElement(
                     'p',
@@ -873,13 +860,11 @@ var BoardLocationHub = function (_React$Component) {
                     '(Safe Haven)'
                 );
             } else {
-                if (position.location.protectionScore) {
-                    protectionScore = React.createElement(
-                        'h3',
-                        null,
-                        protectionScore
-                    );
-                }
+                protectionScore = React.createElement(
+                    'h3',
+                    { className: 'protection' },
+                    Math.floor(position.location.protectionScore).toLocaleString()
+                );
                 if (position.location.owner) {
                     owner = React.createElement(
                         'h3',
@@ -889,16 +874,41 @@ var BoardLocationHub = function (_React$Component) {
                     );
                 }
                 if (position.location.owner) {
-                    // todo - no attack buttons if it's your own hub
-                    options = React.createElement(
-                        'div',
-                        null,
-                        React.createElement(
-                            'button',
+                    if (position.location.owner.nickname == gameState.player.nickname) {
+                        options = React.createElement(
+                            'div',
                             null,
-                            'Attack'
-                        )
-                    );
+                            React.createElement(
+                                'button',
+                                { onClick: this.openModal.bind(this), className: 'button' },
+                                'Protect & Manage'
+                            ),
+                            React.createElement(
+                                _Lightbox2.default,
+                                { modalIsOpen: this.state.modalOpen,
+                                    closeCallback: this.modalCloseCallback.bind(this),
+                                    title: 'Protect the hub' },
+                                React.createElement(DefendPanel, { gameState: gameState, useAbility: this.useAbility.bind(this) })
+                            )
+                        );
+                    } else {
+                        options = React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                                'button',
+                                { onClick: this.openModal.bind(this), className: 'button' },
+                                'Attack'
+                            ),
+                            React.createElement(
+                                _Lightbox2.default,
+                                { modalIsOpen: this.state.modalOpen,
+                                    closeCallback: this.modalCloseCallback.bind(this),
+                                    title: 'Attack' },
+                                React.createElement(AttackPanel, { gameState: gameState, useAbility: this.useAbility.bind(this) })
+                            )
+                        );
+                    }
                 } else {
                     var disabled = gameState.player.points < gameState.gameSettings.originalPurchaseCost;
                     options = React.createElement(
@@ -907,6 +917,7 @@ var BoardLocationHub = function (_React$Component) {
                         React.createElement(
                             'button',
                             {
+                                className: 'button',
                                 onClick: this.props.onTakeHub.bind(this),
                                 disabled: disabled },
                             'Take this hub (',
@@ -941,7 +952,122 @@ var BoardLocationHub = function (_React$Component) {
     return BoardLocationHub;
 }(React.Component);
 
-},{"../../utils/FetchJson":16,"../Utils/Points":13,"./Board/Map":5,"./Board/Spoke":6,"./GamePanel":7}],5:[function(require,module,exports){
+var AttackPanel = function (_React$Component2) {
+    _inherits(AttackPanel, _React$Component2);
+
+    function AttackPanel() {
+        _classCallCheck(this, AttackPanel);
+
+        return _possibleConstructorReturn(this, (AttackPanel.__proto__ || Object.getPrototypeOf(AttackPanel)).apply(this, arguments));
+    }
+
+    _createClass(AttackPanel, [{
+        key: 'render',
+        value: function render() {
+            var gameState = this.props.gameState;
+            return React.createElement(
+                'p',
+                null,
+                'List all the attacking abilities'
+            );
+        }
+    }]);
+
+    return AttackPanel;
+}(React.Component);
+
+var DefendPanel = function (_React$Component3) {
+    _inherits(DefendPanel, _React$Component3);
+
+    function DefendPanel() {
+        _classCallCheck(this, DefendPanel);
+
+        return _possibleConstructorReturn(this, (DefendPanel.__proto__ || Object.getPrototypeOf(DefendPanel)).apply(this, arguments));
+    }
+
+    _createClass(DefendPanel, [{
+        key: 'filterAbilities',
+        value: function filterAbilities(abilityGroups, type) {
+            var abilities = [];
+            abilityGroups.forEach(function (group) {
+                group.items.forEach(function (ability) {
+                    if (ability.ability && type == ability.ability.class) {
+                        abilities.push(ability);
+                    }
+                });
+            });
+            return abilities;
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var gameState = this.props.gameState,
+                abilities = this.filterAbilities(gameState.abilities, 'hub-defend'),
+                availableAbilities = [];
+
+            abilities.forEach(function (ability, i) {
+                var ab = ability.ability,
+                    click = function () {
+                    this.props.useAbility(ab.id);
+                }.bind(this);
+                availableAbilities.push(React.createElement(
+                    'li',
+                    { key: i },
+                    React.createElement(
+                        'div',
+                        { className: 'grid' },
+                        React.createElement(
+                            'div',
+                            { className: '3/4' },
+                            React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                    'h3',
+                                    null,
+                                    ab.name
+                                ),
+                                React.createElement(
+                                    'p',
+                                    null,
+                                    ab.description
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/8' },
+                            ability.count
+                        ),
+                        React.createElement(
+                            'div',
+                            { className: 'g 1/8' },
+                            React.createElement(
+                                'button',
+                                { className: 'button', onClick: click.bind(this) },
+                                'Use'
+                            )
+                        )
+                    )
+                ));
+            });
+
+            return React.createElement(
+                'div',
+                null,
+                React.createElement(
+                    'ul',
+                    { className: 'list--unstyled' },
+                    availableAbilities
+                )
+            );
+        }
+    }]);
+
+    return DefendPanel;
+}(React.Component);
+
+},{"../../utils/FetchJson":17,"../../utils/Lightbox":18,"../Utils/Points":14,"./Board/Map":5,"./Board/Spoke":6,"./GamePanel":7}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -957,6 +1083,10 @@ var _GamePanel3 = _interopRequireDefault(_GamePanel2);
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+var _SvgViewer = require('../../../utils/SvgViewer');
+
+var _SvgViewer2 = _interopRequireDefault(_SvgViewer);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -974,7 +1104,7 @@ var Map = function (_GamePanel) {
 
         var _this = _possibleConstructorReturn(this, (Map.__proto__ || Object.getPrototypeOf(Map)).call(this));
 
-        _this.hexRadius = 32;
+        _this.hexRadius = 80;
         _this.averageVerticalDiameter = 1.5 * _this.hexRadius;
         _this.innerRadius = Math.sqrt(3) / 2 * _this.hexRadius;
         _this.innerDiameter = _this.innerRadius * 2;
@@ -1078,8 +1208,11 @@ var Map = function (_GamePanel) {
     }, {
         key: 'calculateLayout',
         value: function calculateLayout() {
+            this.hexRadius = Math.min(this.state.containerWidth, this.state.containerHeight) / 2.5;
+
             this.totalCol = Math.ceil(this.state.containerWidth / this.innerDiameter);
             this.totalRow = Math.ceil(this.state.containerHeight / this.averageVerticalDiameter);
+
             this.middleX = Math.floor(this.totalCol / 2) - 1;
             this.middleY = Math.floor(this.totalRow / 2) - 1;
 
@@ -1178,20 +1311,27 @@ var Map = function (_GamePanel) {
             var grid = this.drawGrid(),
                 current = this.drawCurrentHub(),
                 hubs = this.drawHubs(),
-                spokes = this.drawSpokes();
-            return _react2.default.createElement(
-                'div',
-                { className: 'map', ref: 'mapContainer' },
-                _react2.default.createElement(
-                    'svg',
-                    { className: 'map__board', xmlns: 'http://www.w3.org/2000/svg',
-                        width: this.state.containerWidth,
-                        height: this.state.containerHeight },
+                spokes = this.drawSpokes(),
+                svg = null;
+
+            if (this.state.containerWidth) {
+                svg = _react2.default.createElement(
+                    _SvgViewer2.default,
+                    { width: this.state.containerWidth,
+                        height: this.state.containerHeight,
+                        initialPan: [-this.state.containerWidth, -this.state.containerHeight],
+                        initialZoom: 1 },
                     grid,
                     spokes,
                     hubs,
                     current
-                )
+                );
+            }
+
+            return _react2.default.createElement(
+                'div',
+                { className: 'map', ref: 'mapContainer' },
+                svg
             );
         }
     }]);
@@ -1249,7 +1389,7 @@ var MapSpoke = function (_React$Component2) {
     return MapSpoke;
 }(_react2.default.Component);
 
-},{"../GamePanel":7,"react":"react"}],6:[function(require,module,exports){
+},{"../../../utils/SvgViewer":19,"../GamePanel":7,"react":"react"}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1365,13 +1505,6 @@ var Spoke = function (_React$Component) {
                 tunnelMesh.position.z = 0;
                 this.scene.add(tunnelMesh);
             }.bind(this));
-
-            // tunnel
-            // THREE.ImageUtils.crossOrigin = '';
-            // this.tunnelTexture = THREE.ImageUtils.loadTexture('/static/dist/img/spoke.jpg');
-            // this.tunnelTexture.wrapT = this.tunnelTexture.wrapS = THREE.RepeatWrapping;
-            // this.tunnelTexture.repeat.set(1, 2);
-
 
             this.clock = new THREE.Clock();
 
@@ -1538,7 +1671,7 @@ var Spoke = function (_React$Component) {
 
 exports.default = Spoke;
 
-},{"../../../utils/FetchJson":16,"../../Utils/Points":13,"react":"react"}],7:[function(require,module,exports){
+},{"../../../utils/FetchJson":17,"../../Utils/Points":14,"react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1739,7 +1872,146 @@ var Player = function (_GamePanel) {
 
 exports.default = Player;
 
-},{"../../utils/FetchJson":16,"../utils/Points":15,"./GamePanel":7,"react":"react"}],9:[function(require,module,exports){
+},{"../../utils/FetchJson":17,"../utils/Points":16,"./GamePanel":7,"react":"react"}],9:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _GamePanel2 = require('./GamePanel');
+
+var _GamePanel3 = _interopRequireDefault(_GamePanel2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Hubs = function (_GamePanel) {
+    _inherits(Hubs, _GamePanel);
+
+    function Hubs() {
+        _classCallCheck(this, Hubs);
+
+        return _possibleConstructorReturn(this, (Hubs.__proto__ || Object.getPrototypeOf(Hubs)).apply(this, arguments));
+    }
+
+    _createClass(Hubs, [{
+        key: 'render',
+        value: function render() {
+            var hubs = this.state.gameState.playerHubs,
+                hubsState = _react2.default.createElement(
+                'p',
+                null,
+                'You own no hubs'
+            );
+
+            if (hubs.length > 0) {
+                (function () {
+                    var hubItems = [];
+                    hubs.forEach(function (item, i) {
+                        hubItems.push(_react2.default.createElement(Hub, { key: i, hub: item }));
+                    });
+                    hubsState = _react2.default.createElement(
+                        'ul',
+                        null,
+                        hubItems
+                    );
+                })();
+            }
+
+            return _react2.default.createElement(
+                'div',
+                { className: 'layout-limit' },
+                _react2.default.createElement(
+                    'h1',
+                    null,
+                    'Hubs'
+                ),
+                hubsState
+            );
+        }
+    }]);
+
+    return Hubs;
+}(_GamePanel3.default);
+
+exports.default = Hubs;
+
+var Hub = function (_React$Component) {
+    _inherits(Hub, _React$Component);
+
+    function Hub() {
+        _classCallCheck(this, Hub);
+
+        return _possibleConstructorReturn(this, (Hub.__proto__ || Object.getPrototypeOf(Hub)).apply(this, arguments));
+    }
+
+    _createClass(Hub, [{
+        key: 'render',
+        value: function render() {
+            var hub = this.props.hub;
+            return _react2.default.createElement(
+                'li',
+                null,
+                _react2.default.createElement(
+                    'div',
+                    { className: 'grid' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'g 1/3' },
+                        _react2.default.createElement(
+                            'div',
+                            null,
+                            _react2.default.createElement(
+                                'h3',
+                                null,
+                                hub.name
+                            ),
+                            _react2.default.createElement(
+                                'h4',
+                                null,
+                                hub.cluster.name
+                            )
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'g 1/3' },
+                        _react2.default.createElement(
+                            'p',
+                            { className: 'protection' },
+                            Math.floor(hub.protectionScore).toLocaleString()
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'g 1/3' },
+                        _react2.default.createElement(
+                            'button',
+                            null,
+                            'Protect'
+                        )
+                    )
+                )
+            );
+        }
+    }]);
+
+    return Hub;
+}(_react2.default.Component);
+
+},{"./GamePanel":7,"react":"react"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1898,7 +2170,7 @@ var Hub = function (_React$Component) {
 
 exports.default = Hub;
 
-},{"../utils/FetchJson":16,"./utils/Player":14,"react":"react"}],10:[function(require,module,exports){
+},{"../utils/FetchJson":17,"./utils/Player":15,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2041,7 +2313,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"../utils/FetchJson":16,"./utils/Points":15,"react":"react"}],11:[function(require,module,exports){
+},{"../utils/FetchJson":17,"./utils/Points":16,"react":"react"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2140,7 +2412,7 @@ var Hub = function (_React$Component) {
 
 exports.default = Hub;
 
-},{"../utils/FetchJson":16,"./Utils/Player":12,"react":"react"}],12:[function(require,module,exports){
+},{"../utils/FetchJson":17,"./Utils/Player":13,"react":"react"}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2204,7 +2476,7 @@ var Player = function (_React$Component) {
 
 exports.default = Player;
 
-},{"./Points":13,"react":"react"}],13:[function(require,module,exports){
+},{"./Points":14,"react":"react"}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2292,11 +2564,11 @@ var Points = function (_React$Component) {
 
 exports.default = Points;
 
-},{"react":"react"}],14:[function(require,module,exports){
-arguments[4][12][0].apply(exports,arguments)
-},{"./Points":15,"dup":12,"react":"react"}],15:[function(require,module,exports){
+},{"react":"react"}],15:[function(require,module,exports){
 arguments[4][13][0].apply(exports,arguments)
-},{"dup":13,"react":"react"}],16:[function(require,module,exports){
+},{"./Points":16,"dup":13,"react":"react"}],16:[function(require,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"dup":14,"react":"react"}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2372,7 +2644,7 @@ var FetchJson = function () {
 
 exports.default = FetchJson;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2474,7 +2746,161 @@ var Lightbox = function (_React$Component) {
 exports.default = Lightbox;
 ;
 
-},{"react":"react","react-modal":"react-modal"}],"react-dom":[function(require,module,exports){
+},{"react":"react","react-modal":"react-modal"}],19:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var SvgViewer = function (_React$Component) {
+    _inherits(SvgViewer, _React$Component);
+
+    function SvgViewer() {
+        _classCallCheck(this, SvgViewer);
+
+        var _this = _possibleConstructorReturn(this, (SvgViewer.__proto__ || Object.getPrototypeOf(SvgViewer)).call(this));
+
+        _this.state = {
+            matrix: [1, 0, 0, 1, 0, 0],
+            dragging: false };
+        return _this;
+    }
+
+    _createClass(SvgViewer, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            if (this.props.initialPan) {
+                var m = this.state.matrix;
+                m[4] = this.props.initialPan[0];
+                m[5] = this.props.initialPan[1];
+                this.setState({ matrix: m });
+            }
+        }
+    }, {
+        key: 'onDragStart',
+        value: function onDragStart(e) {
+            // Find start position of drag based on touch/mouse coordinates.
+            var startX = typeof e.clientX === 'undefined' ? e.changedTouches[0].clientX : e.clientX;
+            var startY = typeof e.clientY === 'undefined' ? e.changedTouches[0].clientY : e.clientY;
+
+            // Update state with above coordinates, and set dragging to true.
+            var state = {
+                dragging: true,
+                startX: startX,
+                startY: startY
+            };
+
+            this.setState(state);
+        }
+    }, {
+        key: 'onDragMove',
+        value: function onDragMove(e) {
+            // First check if the state is dragging, if not we can just return
+            // so we do not move unless the user wants to move
+            if (!this.state.dragging) {
+                return;
+            }
+
+            // Get the new x coordinates
+            var x = typeof e.clientX === 'undefined' ? e.changedTouches[0].clientX : e.clientX;
+            var y = typeof e.clientY === 'undefined' ? e.changedTouches[0].clientY : e.clientY;
+
+            // Take the delta where we are minus where we came from.
+            var dx = x - this.state.startX;
+            var dy = y - this.state.startY;
+
+            // Pan using the deltas
+            this.pan(dx, dy);
+
+            // Update the state
+            this.setState({
+                startX: x,
+                startY: y
+            });
+        }
+    }, {
+        key: 'onDragEnd',
+        value: function onDragEnd() {
+            this.setState({ dragging: false });
+        }
+    }, {
+        key: 'onWheel',
+        value: function onWheel(e) {
+            if (e.deltaY < 0) {
+                this.zoom(1.05);
+            } else {
+                this.zoom(0.95);
+            }
+        }
+    }, {
+        key: 'pan',
+        value: function pan(dx, dy) {
+            var m = this.state.matrix;
+            m[4] += dx;
+            m[5] += dy;
+            this.setState({ matrix: m });
+        }
+    }, {
+        key: 'zoom',
+        value: function zoom(scale) {
+            var m = this.state.matrix;
+            var len = m.length;
+            for (var i = 0; i < len; i++) {
+                m[i] *= scale;
+            }
+            m[4] += (1 - scale) * this.props.width / 2;
+            m[5] += (1 - scale) * this.props.height / 2;
+            this.setState({ matrix: m });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _props = this.props;
+            var height = _props.height;
+            var width = _props.width;
+
+            return _react2.default.createElement(
+                'svg',
+                {
+                    height: height,
+                    width: width,
+                    onMouseDown: this.onDragStart.bind(this),
+                    onTouchStart: this.onDragStart.bind(this),
+                    onMouseMove: this.onDragMove.bind(this),
+                    onTouchMove: this.onDragMove.bind(this),
+                    onMouseUp: this.onDragEnd.bind(this),
+                    onTouchEnd: this.onDragEnd.bind(this),
+                    onWheel: this.onWheel.bind(this) },
+                _react2.default.createElement(
+                    'g',
+                    { transform: 'matrix(' + this.state.matrix.join(' ') + ')' },
+                    this.props.children
+                )
+            );
+        }
+    }]);
+
+    return SvgViewer;
+}(_react2.default.Component);
+
+exports.default = SvgViewer;
+
+},{"react":"react"}],"react-dom":[function(require,module,exports){
 "use strict";
 
 module.exports = window.ReactDOM;

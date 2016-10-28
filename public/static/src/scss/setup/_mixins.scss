@@ -44,6 +44,14 @@
     flex:  $values;
 }
 
+@mixin flex-flow($values) {
+    -webkit-box-flex-flow: $values;
+    -moz-box-flex-flow:  $values;
+    -webkit-flex-flow:  $values;
+    -ms-flex-flow:  $values;
+    flex-flow:  $values;
+}
+
 @mixin flex-fill() {
     @include flexbox();
     @include flex-grow(1);

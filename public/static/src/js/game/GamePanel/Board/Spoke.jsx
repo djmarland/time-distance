@@ -78,14 +78,6 @@ export default class Spoke extends React.Component {
             }.bind(this)
         );
 
-        // tunnel
-        // THREE.ImageUtils.crossOrigin = '';
-        // this.tunnelTexture = THREE.ImageUtils.loadTexture('/static/dist/img/spoke.jpg');
-        // this.tunnelTexture.wrapT = this.tunnelTexture.wrapS = THREE.RepeatWrapping;
-        // this.tunnelTexture.repeat.set(1, 2);
-
-
-
         this.clock = new THREE.Clock();
 
         this.refs.visualContainer.appendChild( this.renderer.domElement );

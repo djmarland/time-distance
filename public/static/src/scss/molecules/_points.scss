@@ -1,4 +1,5 @@
-.points {
+.points,
+.protection {
     padding-left: 24px;
     position: relative;
 
@@ -11,4 +12,8 @@
         left: 0;
         top: -6px;
     }
+}
+
+.protection:before {
+    content: '\1f6e1';
 }

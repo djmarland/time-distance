@@ -9,6 +9,7 @@ class Ability extends Entity implements \JsonSerializable
     private $name;
     private $imageKey;
     private $type;
+    private $class;
     private $description;
     private $spawnRate;
     private $isMystery;
@@ -19,6 +20,7 @@ class Ability extends Entity implements \JsonSerializable
         string $name,
         string $imageKey,
         string $type,
+        string $class,
         string $description,
         float $spawnRate,
         bool $isMystery,
@@ -29,6 +31,7 @@ class Ability extends Entity implements \JsonSerializable
         $this->name = $name;
         $this->imageKey = $imageKey;
         $this->type = $type;
+        $this->class = $class;
         $this->description = $description;
         $this->spawnRate = $spawnRate;
         $this->isMystery = $isMystery;
@@ -48,6 +51,11 @@ class Ability extends Entity implements \JsonSerializable
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getClass(): string
+    {
+        return $this->class;
     }
 
     public function getDescription(): string
@@ -73,6 +81,7 @@ class Ability extends Entity implements \JsonSerializable
         $data = [
             'id' => $this->id,
             'name' => $this->getName(),
+            'class' => $this->getClass(),
             'description' => $this->getDescription(),
             'imageKey' => $this->getImageKey(),
         ];

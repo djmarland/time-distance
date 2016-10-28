@@ -19,6 +19,9 @@ class Ability extends Entity
     /** @ORM\Column(type="string") */
     private $type;
 
+    /** @ORM\Column(type="string") */
+    private $class;
+
     /** @ORM\Column(type="float") */
     private $spawnRate = 0;
 
@@ -34,11 +37,13 @@ class Ability extends Entity
     public function __construct(
         string $name,
         string $imageKey,
-        string $type
+        string $type,
+        string $class
     ) {
         $this->name = $name;
         $this->imageKey = $imageKey;
         $this->type = $type;
+        $this->class = $class;
     }
 
     /** Getters/Setters */
@@ -55,6 +60,11 @@ class Ability extends Entity
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getClass(): string
+    {
+        return $this->class;
     }
 
     public function getSpawnRate(): float

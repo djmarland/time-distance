@@ -1,10 +1,11 @@
 import GamePanel from '../GamePanel';
 import React from 'react';
+import SvgViewer from '../../../utils/SvgViewer';
 
 export default class Map extends GamePanel {
     constructor() {
         super();
-        this.hexRadius = 32;
+        this.hexRadius = 80;
         this.averageVerticalDiameter = 1.5 * this.hexRadius;
         this.innerRadius = (Math.sqrt(3)/2) * this.hexRadius;
         this.innerDiameter = this.innerRadius * 2;
@@ -90,8 +91,13 @@ export default class Map extends GamePanel {
     }
 
     calculateLayout() {
+        this.hexRadius = Math.min(this.state.containerWidth, this.state.containerHeight) / 2.5;
+
         this.totalCol = Math.ceil(this.state.containerWidth / this.innerDiameter);
         this.totalRow = Math.ceil(this.state.containerHeight / this.averageVerticalDiameter);
+
+
+
         this.middleX = Math.floor(this.totalCol / 2) - 1;
         this.middleY = Math.floor(this.totalRow / 2) - 1;
 
@@ -187,17 +193,26 @@ export default class Map extends GamePanel {
         let grid = this.drawGrid(),
             current = this.drawCurrentHub(),
             hubs = this.drawHubs(),
-            spokes = this.drawSpokes();
+            spokes = this.drawSpokes(),
+            svg = null;
+
+        if (this.state.containerWidth) {
+            svg = (
+                <SvgViewer width={this.state.containerWidth}
+                           height={this.state.containerHeight}
+                           initialPan={[-(this.state.containerWidth),-(this.state.containerHeight)]}
+                           initialZoom={1}>
+                        {grid}
+                        {spokes}
+                        {hubs}
+                        {current}
+                </SvgViewer>
+            );
+        }
+
         return (
             <div className="map" ref="mapContainer">
-                <svg className="map__board" xmlns="http://www.w3.org/2000/svg"
-                     width={this.state.containerWidth}
-                     height={this.state.containerHeight}>
-                    {grid}
-                    {spokes}
-                    {hubs}
-                    {current}
-                </svg>
+                {svg}
             </div>
         );
     }

@@ -54,3 +54,7 @@ action_take_hub:
 action_take_ability:
   path:     /play/take-ability.json
   defaults: { _controller: AppBundle:Game:takeAbility }
+
+action_use_ability:
+  path:     /play/use-ability.json
+  defaults: { _controller: AppBundle:Game:useAbility }

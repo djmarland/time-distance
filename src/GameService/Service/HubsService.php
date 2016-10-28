@@ -2,6 +2,7 @@
 
 namespace GameService\Service;
 
+use Doctrine\ORM\QueryBuilder;
 use Exception;
 use GameService\Data\Database\Entity\{
     Hub as HubEntity,
@@ -39,6 +40,17 @@ class HubsService extends Service
             ->getDomainModel(reset($result));
     }
 
+    public function findForPlayer(Player $player): array
+    {
+        $qb = $this->getQueryBuilder(self::ENTITY);
+        $qb->select('Hub', 'Cluster')
+            ->join('Hub.cluster', 'Cluster')
+            ->where('Hub.owner = :playerId')
+            ->addOrderBy('Hub.name', 'ASC')
+            ->setParameter('playerId', $player->getId());
+        return $this->getResultsArray($qb);
+    }
+
     public function findAllInCoordinates(): array
     {
         $qb = $this->getQueryBuilder(self::ENTITY);
@@ -64,14 +76,7 @@ class HubsService extends Service
         $qb = $this->getQueryBuilder(self::ENTITY);
         $qb->select('Hub', 'Cluster')
             ->join('Hub.cluster', 'Cluster');
-        $results = $qb->getQuery()->getArrayResult();
-        $hubs = [];
-        $hubMapper = $this->mapperFactory->createHubMapper();
-        foreach($results as $result) {
-            $hub = $hubMapper->getDomainModel($result);
-            $hubs[] = $hub;
-        }
-        return $hubs;
+        return $this->getResultsArray($qb);
     }
 
     public function takeOwnership(Hub $hub, Player $player, int $cost)
@@ -192,5 +197,17 @@ class HubsService extends Service
             ->setParameter('id', $hub->getId());
         /** @var HubEntity $hubEntity */
         return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    private function getResultsArray(QueryBuilder $qb): array
+    {
+        $results = $qb->getQuery()->getArrayResult();
+        $hubs = [];
+        $hubMapper = $this->mapperFactory->createHubMapper();
+        foreach($results as $result) {
+            $hub = $hubMapper->getDomainModel($result);
+            $hubs[] = $hub;
+        }
+        return $hubs;
     }
 }

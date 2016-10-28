@@ -2,6 +2,7 @@ import React from 'react';
 import Header from './GamePanel/Header';
 import Board from './GamePanel/Board';
 import Abilities from './GamePanel/Abilities';
+import Hubs from './GamePanel/Hubs';
 
 export default class Game extends React.Component {
     static get PANEL_BOARD() { return 'board'; }
@@ -41,7 +42,9 @@ export default class Game extends React.Component {
         let visiblePanel = null;
         switch (this.state.activePanel) {
             case Game.PANEL_HUBS:
-                visiblePanel = 'HUBS';
+                visiblePanel = (
+                    <Hubs gameState={this.state.gameState} onGameUpdate={this.updateGameState.bind(this)} />
+                );
                 break;
             case Game.PANEL_ABILITIES:
                 visiblePanel = (

@@ -14,7 +14,7 @@ var vendors = [
     'react',
     'react-dom',
     'react-modal',
-    'three'
+    'three',
 ];
 
 var getVendorSrc = function(min) {
