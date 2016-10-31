@@ -188,20 +188,19 @@ class GameController extends Controller
     public function useAbilityAction()
     {
         $player = $this->getPlayer();
-        $position = $this->get('app.services.positions')->findFullCurrentPositionForPlayer($player);
+
+        $abilityAction = json_decode($this->request->getContent());
 
         // check that we are in a hub
-        if (!$position->isInHub()) {
-            throw new HttpException(400, 'Not in a valid state to perform move');
+        if (!$abilityAction ||
+            !isset($abilityAction->ability) ||
+            !isset($abilityAction->target)
+        ) {
+            throw new HttpException(400, 'Invalid action');
         }
 
-
-
-        $hub = $position->getLocation();
-        $abilityId = $this->request->getContent();
-
         // take the ability
-        $this->get('app.services.hubs')->useAbility($position, $player, $abilityId);
+        $this->get('app.services.game_action')->useAbility($player, $abilityAction);
 
         return $this->renderStatus();
     }
