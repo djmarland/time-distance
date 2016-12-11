@@ -116,7 +116,6 @@ export default class Map extends GamePanel {
 
     drawGrid() {
         let col, row, polygons = [];
-
         let revealed = this.state.gameState.map.visibleSpaces;
 
         // going from -1 to 1 over to ensure we don't see the edges
@@ -128,9 +127,8 @@ export default class Map extends GamePanel {
 
                 if (revealed[y] && revealed[y][x]) {
                     className += 'map__grid--visible';
+                    polygons.push(this.makeHexagonPolygon(col, row, className));
                 }
-
-                polygons.push(this.makeHexagonPolygon(col, row, className));
             }
         }
         return polygons;

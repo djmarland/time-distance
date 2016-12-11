@@ -1,11 +1,10 @@
 .map {
     overflow: hidden;
-    background: $color-white;
-    background: radial-gradient(circle at center, $color-grey-mid 0%, $color-grey-lightest 80%);
+    background: #66a9de;
+    background: radial-gradient(circle at center, #66a9de 0%, #0b3454 80%);
     line-height: 0;
     height: 100%;
     width: 100%;
-    min-height: 400px; // todo - be more responsive
 }
 
 .map__board {
@@ -14,26 +13,25 @@
 
 .map__grid {
     fill: transparent;
-    stroke: $color-grey-lightest;
+    stroke: #5c91bb;
     stroke-width: 1px;
 }
 
 .map__grid--visible {
-    fill: $color-white;
+    fill: #a2c9e4;
 }
 
 .map__hub {
-    stroke-width: $size-grid-unit-small;
-    fill: #fff;
+    fill: #84aa7b;
 }
 
 .map__hub--current {
     stroke: $color-black;
+    stroke-width: $size-grid-unit-small;
 }
 
 .map__hub--available {
     cursor: pointer;
-    stroke: green;
 }
 
 @keyframes SPOKEVOID {
@@ -46,11 +44,10 @@
 }
 
 .map__spoke {
-    stroke: $color-brand;
+    stroke: $color-black;
     stroke-width: $size-grid-unit-small;
-    stroke-dasharray: 1;
+    stroke-dasharray: 50;
 }
 .map__spoke--void {
-    stroke-dasharray: 40;
     animation: SPOKEVOID 10s linear infinite;
 }

@@ -246,7 +246,7 @@ var Game = function (_React$Component) {
             //     );
             // }
 
-            var tabData = [{ key: Game.PANEL_BOARD, title: 'Location' }, { key: Game.PANEL_HUBS, title: 'Hubs' }, { key: Game.PANEL_ABILITIES, title: 'Abilities' }, { key: Game.PANEL_CLANS, title: 'Clans' }, { key: Game.PANEL_STATS, title: 'Stats' }],
+            var tabData = [{ key: Game.PANEL_BOARD, title: 'Location' }, { key: Game.PANEL_HUBS, title: 'Portfolio' }, { key: Game.PANEL_ABILITIES, title: 'Abilities' }, { key: Game.PANEL_CLANS, title: 'Clans' }, { key: Game.PANEL_STATS, title: 'Stats' }],
                 tabs = [];
             tabData.forEach(function (tab, i) {
                 var isActive = tab.key == this.state.activePanel;
@@ -1234,7 +1234,6 @@ var Map = function (_GamePanel) {
             var col = void 0,
                 row = void 0,
                 polygons = [];
-
             var revealed = this.state.gameState.map.visibleSpaces;
 
             // going from -1 to 1 over to ensure we don't see the edges
@@ -1246,9 +1245,8 @@ var Map = function (_GamePanel) {
 
                     if (revealed[y] && revealed[y][x]) {
                         className += 'map__grid--visible';
+                        polygons.push(this.makeHexagonPolygon(col, row, className));
                     }
-
-                    polygons.push(this.makeHexagonPolygon(col, row, className));
                 }
             }
             return polygons;

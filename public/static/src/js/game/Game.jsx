@@ -97,7 +97,7 @@ export default class Game extends React.Component {
 
         let tabData = [
                 { key : Game.PANEL_BOARD, title : 'Location' },
-                { key : Game.PANEL_HUBS, title : 'Hubs' },
+                { key : Game.PANEL_HUBS, title : 'Portfolio' },
                 { key : Game.PANEL_ABILITIES, title : 'Abilities' },
                 { key : Game.PANEL_CLANS, title : 'Clans' },
                 { key : Game.PANEL_STATS, title : 'Stats' },
